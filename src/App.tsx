@@ -1,13 +1,18 @@
-import { Button } from "@/components/ui/button"
+import React from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import POSPage from "./pages/POSPage";
 
-function App() {
+
+const App: React.FC = () => {
   return (
-    <>
-       <div className="flex min-h-svh flex-col items-center justify-center">
-      <Button>Click me</Button>
-    </div>
-    </>
-  )
-}
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Navigate to="/pos" replace />} />
+        <Route path="/pos" element={<POSPage />} />
+        <Route path="*" element={<div>404 Page Not Found</div>} />
+      </Routes>
+    </BrowserRouter>
+  );
+};
 
-export default App
+export default App;
