@@ -1,19 +1,19 @@
 import api from "./axios";
-// ------------------------
 export interface OrderItem {
   item_id: string;
   name: string;
   quantity: number;
-  base_price: number;
-  modifiers?: { name: string; price_extra: number }[];
-  note_options?: string[];
+  basePrice: number;
+  modifiers: { name: string; priceExtra: number }[];
+  noteOptions: string[];
 }
 
 export interface Order {
   _id: string;
   items: OrderItem[];
-  total_price: number;
+  totalPrice: number;
   status: "pending" | "paid" | "cancelled";
+  paymentMethod: string,
   createdAt: string;
   updatedAt: string;
 }
