@@ -19,17 +19,17 @@ export interface Order {
 }
 
 export const fetchOrders = async (): Promise<Order[]> => {
-  const res = await api.get("/orders");
+  const res = await api.get("orders");
   return res.data.data;
 };
 
 export const fetchOrderById = async (id: string): Promise<Order> => {
-  const res = await api.get(`/orders/${id}`);
+  const res = await api.get(`orders/${id}`);
   return res.data.data;
 };
 
 export const createOrder = async (items: OrderItem[]): Promise<Order> => {
-  const res = await api.post("/orders", { items });
+  const res = await api.post("orders", { items });
   return res.data.data;
 };
 
@@ -37,11 +37,11 @@ export const updateOrder = async (
   id: string,
   data: Partial<Order>
 ): Promise<Order> => {
-  const res = await api.put(`/orders/${id}`, data);
+  const res = await api.put(`orders/${id}`, data);
   return res.data.data;
 };
 
 export const deleteOrder = async (id: string) => {
-  const res = await api.delete(`/orders/${id}`);
+  const res = await api.delete(`orders/${id}`);
   return res.data;
 };

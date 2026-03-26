@@ -6,22 +6,22 @@ export interface Category {
 }
 
 export const getCategories = async (): Promise<Category[]> => {
-    const res = await api.get('/api/categories').then((data) => data.data)
+    const res = await api.get('categories').then((data) => data.data)
     return res.data
 }
 
 export const createCategory = async (name: string) => {
-    const res = await api.post('/api/categories', { name })
+    const res = await api.post('categories', { name })
     return res.data
 }
 
 export const deleteCategory = async (id: string) => {
-    const res = await api.delete(`/api/categories/${id}`)
+    const res = await api.delete(`categories/${id}`)
     return res.data
 }
 
 // Sửa category
 export const updateCategory = async (id: string, name: string) => {
-    const res = await api.put(`/api/categories/${id}`, { name })
+    const res = await api.put(`categories/${id}`, { name })
     return res.data
 }

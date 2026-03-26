@@ -10,6 +10,6 @@ export interface Item {
 }
 
 export const getItems = async (): Promise<Item[]> => {
-    const res = await api.get('/api/items')
+    const res = await api.get('items')
     return res.data.data
 }
