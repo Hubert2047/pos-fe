@@ -1,5 +1,6 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
+import type { Expense } from '@/api/expense'
 import {
     AlertDialog,
     AlertDialogAction,
@@ -10,44 +11,16 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
     AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { deleteExpense, getExpenses, type Expense } from '@/api/expense'
-import { Spinner } from '../ui/spinner'
-import { toast } from 'sonner'
+} from '../ui/alert-dialog'
+import type { UseMutationResult } from '@tanstack/react-query'
 
-export function ExpenseTable() {
-    const queryClient = useQueryClient()
+type Props = {
+    expenses: Expense[]
+    deleteMutation: UseMutationResult<unknown, Error, string, unknown>
+    handleDelete: (id: string) => void
+}
 
-    const { data: expenses = [], isLoading } = useQuery<Expense[], Error>({
-        queryKey: ['expenses'],
-        queryFn: getExpenses,
-        staleTime: 5 * 60 * 1000,
-    })
-
-    const deleteMutation = useMutation({
-        mutationFn: deleteExpense,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['expenses'] })
-            toast('Xóa thành công')
-        },
-        onError: () => {
-            toast('Xóa thất bại')
-        },
-    })
-
-    const handleDelete = (id: string) => {
-        deleteMutation.mutate(id)
-    }
-
-    if (isLoading) {
-        return (
-            <div className='flex items-center justify-center h-screen'>
-                <Spinner />
-            </div>
-        )
-    }
-
+export function ExpenseTable({ expenses, deleteMutation, handleDelete }: Props) {
     return (
         <Table >
             <TableHeader>
@@ -79,7 +52,7 @@ export function ExpenseTable() {
                                         </Button>
                                     </AlertDialogTrigger>
 
-                                    <AlertDialogContent className="max-w-sm p-4">
+                                    <AlertDialogContent className='max-w-sm p-4'>
                                         <AlertDialogHeader>
                                             <AlertDialogTitle className='text-black!'>
                                                 Bạn có chắc muốn xóa?

@@ -5,11 +5,17 @@ export interface Item {
     name: string
     categoryName: string
     basePrice: number
-    modifiers: string[]
+    addons: Addon[]
+    variants: string[]
     noteOptions: string[]
+    active: boolean
 }
-
-export const getItems = async (): Promise<Item[]> => {
-    const res = await api.get('items')
+interface Addon {
+    _id: string
+    name: string
+    priceExtra: number
+}
+export const getItems = async (active = true): Promise<Item[]> => {
+    const res = await api.get(`items?active=${active}`)
     return res.data.data
 }
