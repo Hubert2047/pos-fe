@@ -44,7 +44,7 @@ export default function ExpenseTableDialog({ open, onClose }: Props) {
             onOpenChange={(isOpen) => {
                 if (!isOpen) onClose()
             }}>
-            <DialogContent className="max-w-4xl w-full">
+            <DialogContent className="min-w-max max-w-[90vw]">
                 <DialogHeader>
                     <DialogTitle className='text-black! font-bold! text-xl'>Bảng Chi Phí</DialogTitle>
                 </DialogHeader>

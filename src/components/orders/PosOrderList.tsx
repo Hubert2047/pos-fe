@@ -1,15 +1,22 @@
-import type { OrderItem } from '@/api/order'
-import { Button } from '@/components/ui/button'
+import type {OrderItem} from '@/api/order'
+import {Button} from '@/components/ui/button'
 
 type Props = {
     items: OrderItem[]
+    currentOrderItem: OrderItem
+    updateItem(
+        item: OrderItem,
+    ): void
 }
-export default function PosOrderList({ items }: Props) {
+export default function PosOrderList({items, currentOrderItem, updateItem}: Props) {
     return (
-        <div className='flex flex-col space-y-2'>
-            {items.map((item) => (
-                <Button key={item.id} variant='outline' className='flex justify-between w-full'>
-                    <span className='flex-1 text-left'></span>
+        <div className='flex flex-col space-y-2 overflow-y-auto h-full'>
+            {items.map((item, index) => (
+                <Button
+                    key={item.id + '-' + index} variant={currentOrderItem.id === item.id ? "default" : 'outline'}
+                    className='flex justify-between w-full'
+                    onClick={() => updateItem(item)}>
+                    <span className='flex-1 text-left'>{item.name}</span>
                     <span className='w-20 text-center'>x{item.quantity}</span>
                     <span className='w-24 text-right'>
                         {item.quantity * item.basePrice +
