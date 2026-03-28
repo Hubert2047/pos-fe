@@ -13,6 +13,7 @@ import Loading from "@/components/Loading.tsx";
 import Checkout from "@/components/Checkout.tsx";
 import {type Discount, getDiscounts} from "@/api/discount.ts";
 import {OrderTable} from "@/components/orders/OrderTable.tsx";
+import {FloatingButton} from "@/components/FloatingButton.tsx";
 
 const POSPage: React.FC = () => {
     const [selectedCategory, setSelectedCategory] = useState<string>('牛肉河粉')
@@ -27,6 +28,7 @@ const POSPage: React.FC = () => {
     const [isDetail, setIsDetail] = useState<boolean>(false)
     const [isPendingOrder, setIsPendingOrder] = useState<boolean>(false)
     const [isCheckoutPendingOrder, setIsCheckoutPendingOrder] = useState<boolean>(false)
+    const [openBtns, setOpenBtns] = useState(true)
     const {data: items = [], isLoading: isItemsLoading} = useQuery<Item[], Error>({
         queryKey: ['items'],
         queryFn: () => getItems(true),
@@ -76,7 +78,7 @@ const POSPage: React.FC = () => {
     }, [currentOrder.discount, currentOrder.items])
 
     function handleOpenCheckout(checkout: boolean) {
-        if(isCheckoutPendingOrder){
+        if (isCheckoutPendingOrder) {
             setIsCheckoutPendingOrder(false)
             setCurrentOrder(DEFAULT_ORDER)
         }
@@ -123,6 +125,7 @@ const POSPage: React.FC = () => {
 
     return (
         <div className='flex h-screen gap-2 p-2 overflow-hidden'>
+            <FloatingButton open={openBtns} setOpenBtns={setOpenBtns}/>
             <div className='left flex flex-col flex-1 min-w-0 border border-[#ccc] rounded'>
                 <PosHeader isDetail={isDetail} isPendingOrder={isPendingOrder} currentOrder={currentOrder}
                            setCurrentOrder={setCurrentOrder}
@@ -160,7 +163,7 @@ const POSPage: React.FC = () => {
 
                 </div>
             </div>
-            <div className='right flex flex-col justify-end p-2 gap-2 border border-[#ccc] rounded'>
+            {openBtns && <div className='right flex flex-col justify-end p-2 gap-2 border border-[#ccc] rounded'>
                 <Button variant='outline' onClick={() => setOpenOrderTable(true)}>
                     Bảng đơn hàng
                 </Button>
@@ -179,7 +182,7 @@ const POSPage: React.FC = () => {
                 <Button variant='outline' onClick={() => setAddExpense(true)}>
                     Kết sổ
                 </Button>
-            </div>
+            </div>}
             <AddExpenseDialog open={addExpense} onClose={() => setAddExpense(false)}/>
             {openExpense && <ExpenseTableDialog
                 open={openExpense}
