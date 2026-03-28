@@ -26,7 +26,7 @@ export function AddExpenseDialog({ open, onClose }: Props) {
         mutationFn: createExpense,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['expenses'] })
-            toast('Lưu thành công', {
+            toast.success('Lưu thành công', {
                 closeButton: true,
                 duration: 1500,
             })
@@ -34,7 +34,7 @@ export function AddExpenseDialog({ open, onClose }: Props) {
             setFormData({ name: '', price: '', note: '' })
         },
         onError: () => {
-            toast('Lưu thất bại')
+            toast.error('Lưu thất bại')
         },
     })
 
@@ -47,12 +47,12 @@ export function AddExpenseDialog({ open, onClose }: Props) {
         e.preventDefault()
 
         if (!formData.name) {
-            toast('Tên không được bỏ trống')
+            toast.warning('Tên không được bỏ trống')
             return
         }
 
         if (!formData.price) {
-            toast('Giá không được bỏ trống')
+            toast.warning('Giá không được bỏ trống')
             return
         }
 

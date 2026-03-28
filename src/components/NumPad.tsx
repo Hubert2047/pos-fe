@@ -1,16 +1,33 @@
 import {Button} from "@/components/ui/button";
+import {useState} from "react";
 
 type Props = {
-    onChange: (newValue: string) => void;
+    currentValue: number
+    onChange: (newValue: number) => void;
 };
-export default function NumPad({onChange}: Props) {
-
+export default function NumPad({currentValue, onChange}: Props) {
+    const [isFirst, setIsFirst] = useState(true);
     const numbers = [
         ["1", "2", "3"],
         ["4", "5", "6"],
         ["7", "8", "9"],
         ["0", "00", "clear"],
     ];
+
+    function onChangeNumber(num: string) {
+        let value = currentValue;
+        if (num === "clear") {
+            value = Math.floor(value / 10);
+        } else {
+            if (value === 0 || isFirst) {
+                value = Number(num);
+                setIsFirst(false);
+            } else {
+                value = Number(`${value}${num}`);
+            }
+        }
+        onChange(value)
+    }
 
     return (
         <div className="grid grid-cols-3 gap-2 border-[#ccc] rounded w-64 border p-2">
@@ -25,7 +42,7 @@ export default function NumPad({onChange}: Props) {
                                 ? "bg-green-500 text-white"
                                 : ""
                     }`}
-                    onClick={() => onChange(num)}
+                    onClick={() => onChangeNumber(num)}
                 >
                     {num === "clear" ? "C" : num === "enter" ? "OK" : num}
                 </Button>

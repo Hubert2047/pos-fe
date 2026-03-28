@@ -1,7 +1,8 @@
-import type {OrderItem} from '@/api/order'
+import type {OrderItem} from '@/api/order.ts'
 import {Button} from '@/components/ui/button'
 
 type Props = {
+
     items: OrderItem[]
     currentOrderItem: OrderItem
     updateItem(
@@ -13,7 +14,8 @@ export default function PosOrderList({items, currentOrderItem, updateItem}: Prop
         <div className='flex flex-col space-y-2 overflow-y-auto h-full'>
             {items.map((item, index) => (
                 <Button
-                    key={item.id + '-' + index} variant={currentOrderItem.id === item.id ? "default" : 'outline'}
+                    key={item.id + '-' + index}
+                    variant={currentOrderItem.itemId === item.itemId ? "default" : 'outline'}
                     className='flex justify-between w-full'
                     onClick={() => updateItem(item)}>
                     <span className='flex-1 text-left'>{item.name}</span>

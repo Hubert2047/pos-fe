@@ -10,7 +10,7 @@ export interface Discount {
 }
 
 export const getDiscounts = async (): Promise<Discount[]> => {
-    const res = await api.get('discounts').then((data) => data.data)
-    return res.data
+    const res = await api.get('discounts')
+    return res.data.data
 }
 

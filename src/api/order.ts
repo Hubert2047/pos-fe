@@ -1,6 +1,9 @@
 import api from './axios'
+import type {PaymentMethod} from "@/constance";
+
 export interface OrderItem {
     id: string
+    itemId: string
     name: string
     quantity: number
     basePrice: number
@@ -9,29 +12,48 @@ export interface OrderItem {
     noteOptions: string[]
     note: string
 }
+
+interface Customer {
+    name: string
+    phone: string
+}
+
 interface OrderItemAddon {
     id: string
     name: string
     priceExtra: number
     amount: number
 }
+
 export interface OrderDiscount {
     name: string
     amount: number
     type: 'percent' | 'value'
 }
-export interface Order {
+
+interface BaseOrder {
+    _id: string
     number: number
     items: OrderItem[]
-    totalPrice: number
     status: 'pending' | 'paid' | 'cancelled'
-    paymentMethod: 'cash' | 'uber' | 'linepay' | 'bank' | 'foodpanda'
+    paymentMethod: PaymentMethod
     discount: OrderDiscount | null
     type: 'dine_in' | 'takeaway'
+    customer: Customer | null
+    checkoutPending: boolean
+
 }
 
-export const fetchOrders = async (): Promise<Order[]> => {
-    const res = await api.get('orders')
+export type Order = BaseOrder
+
+export interface IOrder extends BaseOrder {
+    _id: string
+    totalPrice: number
+    createdAt: Date
+}
+
+export const getOrders = async (days?: number): Promise<IOrder[]> => {
+    const res = await api.get('orders', {params: days ? {days} : {}})
     return res.data.data
 }
 export const getNextOrderNumber = async (): Promise<number> => {
@@ -43,11 +65,14 @@ export const fetchOrderById = async (id: string): Promise<Order> => {
     return res.data.data
 }
 
-export const createOrder = async (items: OrderItem[]): Promise<Order> => {
-    const res = await api.post('orders', { items })
+export const createOrder = async (order: Order): Promise<number> => {
+    const res = await api.post('orders', order)
     return res.data.data
 }
-
+export const cancelOrder = async (id: string): Promise<Order> => {
+    const res = await api.patch(`orders/${id}/cancel`)
+    return res.data.data
+}
 export const updateOrder = async (id: string, data: Partial<Order>): Promise<Order> => {
     const res = await api.put(`orders/${id}`, data)
     return res.data.data
