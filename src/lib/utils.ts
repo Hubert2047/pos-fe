@@ -33,7 +33,7 @@ export function getOrderTypeString(type: string) {
         case 'uber':
             return 'Uber'
         case 'foodpanda':
-            return 'FoodPanda'
+            return 'Foodpanda'
         default:
             return type
     }

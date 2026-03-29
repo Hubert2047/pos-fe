@@ -2,7 +2,6 @@ import React, {useMemo, useState} from 'react'
 import {Button} from '@/components/ui/button'
 import {getItems, type Item} from '@/api/item'
 import {getNextOrderNumber, type Order, type OrderItem} from '@/api/order.ts'
-import {AddExpenseDialog} from '../components/expense/AddExpenseDialog'
 import ExpenseTableDialog from '@/components/expense/ExpenseTableDialog'
 import {useQuery} from '@tanstack/react-query'
 import PosOrderList from '@/components/orders/PosOrderList'
@@ -14,14 +13,16 @@ import Checkout from "@/components/Checkout.tsx";
 import {type Discount, getDiscounts} from "@/api/discount.ts";
 import {OrderTable} from "@/components/orders/OrderTable.tsx";
 import {FloatingButton} from "@/components/FloatingButton.tsx";
-import DailyClosing from "@/components/DailyClosing.tsx";
+import DailyClosing from "@/components/daily-closing/DailyClosing.tsx";
+import OtherRevenue from "@/components/other-revenue/OtherRevenue.tsx";
+import ShiftAttendance from "@/components/ShiftAttendance.tsx";
 
 const POSPage: React.FC = () => {
     const [selectedCategory, setSelectedCategory] = useState<string>('牛肉河粉')
     const [currentOrder, setCurrentOrder] = useState<Order>(DEFAULT_ORDER)
     const [currentOrderItem, setCurrentOrderItem] = useState<OrderItem>(DEFAULT_ORDER_ITEM)
     const [selectedItem, setSelectedItem] = useState<Item | null>(null)
-    const [addExpense, setAddExpense] = useState<boolean>(false)
+
     const [openOrderTable, setOpenOrderTable] = useState<boolean>(false)
     const [openExpense, setOpenExpense] = useState<boolean>(false)
     const [isEditItem, setIsEditItem] = useState<boolean>(false)
@@ -31,6 +32,8 @@ const POSPage: React.FC = () => {
     const [isCheckoutPendingOrder, setIsCheckoutPendingOrder] = useState<boolean>(false)
     const [openBtns, setOpenBtns] = useState(true)
     const [openDailyClosing, setOpenDailyClosing] = useState(false)
+    const [openOtherRevenue, setOpenOtherRevenue] = useState(false)
+    const [openShiftAttendance, setOpenShiftAttendance] = useState(false)
     const {data: items = [], isLoading: isItemsLoading} = useQuery<Item[], Error>({
         queryKey: ['items'],
         queryFn: () => getItems(true),
@@ -169,23 +172,19 @@ const POSPage: React.FC = () => {
                 <Button variant='outline' onClick={() => setOpenOrderTable(true)}>
                     Bảng đơn hàng
                 </Button>
-                <Button variant='outline' onClick={() => setAddExpense(true)}>
-                    Thu ngân
-                </Button>
-                <Button variant='outline' onClick={() => setAddExpense(true)}>
-                    Thêm chi phí
+                <Button variant='outline' onClick={() => setOpenOtherRevenue(true)}>
+                    Thu nhập khác
                 </Button>
                 <Button variant='outline' onClick={() => setOpenExpense(true)}>
                     Bảng chi phí
                 </Button>
-                <Button variant='outline' onClick={() => setAddExpense(true)}>
+                <Button variant='outline' onClick={() => setOpenShiftAttendance(true)}>
                     Chấm công
                 </Button>
                 <Button variant='outline' onClick={() => setOpenDailyClosing(true)}>
                     Kết sổ
                 </Button>
             </div>}
-            <AddExpenseDialog open={addExpense} onClose={() => setAddExpense(false)}/>
             {openExpense && <ExpenseTableDialog
                 open={openExpense}
                 onClose={() => {
@@ -198,6 +197,8 @@ const POSPage: React.FC = () => {
                     setOpenOrderTable(false)
                 }}/>}
             {openDailyClosing && <DailyClosing open={openDailyClosing} onClose={() => setOpenDailyClosing(false)}/>}
+            {openOtherRevenue && <OtherRevenue open={openOtherRevenue} onClose={() => setOpenOtherRevenue(false)}/>}
+            {openShiftAttendance && <ShiftAttendance open={openShiftAttendance} onClose={() => {setOpenShiftAttendance(false)}} />}
         </div>
     )
 }

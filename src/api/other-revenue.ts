@@ -1,0 +1,45 @@
+import api from './axios'
+
+export interface Revenue {
+    _id: string
+    name: string
+    price: number
+    note?: string
+    createdAt: string
+    updatedAt: string
+}
+
+export interface ICreateOtherRevenue {
+    name: string
+    price: number
+    note?: string
+}
+
+export interface IUpdateRevenue extends ICreateOtherRevenue {
+    _id: string
+}
+
+export const getRevenues = async (date?: string): Promise<Revenue[]> => {
+    const res = await api.get('revenues', {
+        params: date ? {date} : {}
+    })
+    return res.data.data
+}
+
+
+export const createRevenue = async (data: ICreateOtherRevenue): Promise<Revenue> => {
+    return api.post('revenues', data)
+}
+
+export const updateRevenue = async ({id, data}: {
+    id: string
+    data: Partial<ICreateOtherRevenue>
+}): Promise<IUpdateRevenue> => {
+    const res = await api.put(`revenues/${id}`, data)
+    return res.data.data
+}
+
+export const deleteRevenue = async (id: string) => {
+    const res = await api.delete(`revenues/${id}`)
+    return res.data
+}
