@@ -1,8 +1,7 @@
 import {Dialog, DialogContent, DialogHeader, DialogTitle} from '@/components/ui/dialog'
 import {ExpenseTable} from './ExpenseTable'
-import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query'
-import {deleteExpense, getExpenses, type Expense} from '@/api/expense'
-import {toast} from 'sonner'
+import { useQuery} from '@tanstack/react-query'
+import {getExpenses, type Expense} from '@/api/expense'
 import Loading from "@/components/Loading.tsx";
 
 type Props = {
@@ -10,27 +9,11 @@ type Props = {
     onClose: () => void
 }
 export default function ExpenseTableDialog({open, onClose}: Props) {
-    const queryClient = useQueryClient()
-
     const {data: expenses = [], isLoading} = useQuery<Expense[], Error>({
         queryKey: ['expenses'],
-        queryFn: getExpenses,
+        queryFn: () => getExpenses(),
         staleTime: 5 * 60 * 1000,
     })
-    const deleteMutation = useMutation({
-        mutationFn: deleteExpense,
-        onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ['expenses']}).then()
-            toast.success('Xóa thành công')
-        },
-        onError: () => {
-            toast.error('Xóa thất bại')
-        },
-    })
-    const handleDelete = (id: string) => {
-        deleteMutation.mutate(id)
-    }
-
     if (isLoading) {
         return <Loading/>
     }
@@ -44,7 +27,7 @@ export default function ExpenseTableDialog({open, onClose}: Props) {
                 <DialogHeader>
                     <DialogTitle className='text-black! font-bold! text-xl'>Bảng Chi Phí</DialogTitle>
                 </DialogHeader>
-                <ExpenseTable expenses={expenses} handleDelete={handleDelete} deleteMutation={deleteMutation}/>
+                <ExpenseTable expenses={expenses} />
             </DialogContent>
         </Dialog>
     )

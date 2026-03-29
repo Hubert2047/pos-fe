@@ -9,14 +9,19 @@ export interface Expense {
     updatedAt: string
 }
 
-export interface CreateExpense {
+export interface ICreateExpense {
     name: string
     price: number
     note?: string
 }
+export interface IUpdateExpense extends ICreateExpense {
+    _id: string
+}
 
-export const getExpenses = async (): Promise<Expense[]> => {
-    const res = await api.get('expenses')
+export const getExpenses = async (date?: string): Promise<Expense[]> => {
+    const res = await api.get('expenses', {
+        params: date ? { date } : {}
+    })
     return res.data.data
 }
 
@@ -25,11 +30,14 @@ export const fetchExpenseById = async (id: string): Promise<Expense> => {
     return res.data.data
 }
 
-export const createExpense = async (data: CreateExpense): Promise<Expense> => {
+export const createExpense = async (data: ICreateExpense): Promise<Expense> => {
     return api.post('expenses', data)
 }
 
-export const updateExpense = async (id: string, data: Partial<CreateExpense>): Promise<Expense> => {
+export const updateExpense = async ({id, data}: {
+    id: string
+    data: Partial<ICreateExpense>
+}): Promise<IUpdateExpense> => {
     const res = await api.put(`expenses/${id}`, data)
     return res.data.data
 }

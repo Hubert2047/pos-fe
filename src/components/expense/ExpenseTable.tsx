@@ -1,6 +1,6 @@
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from '@/components/ui/table'
 import {Button} from '@/components/ui/button'
-import type {Expense} from '@/api/expense'
+import {deleteExpense, type Expense, type IUpdateExpense} from '@/api/expense'
 import {
     AlertDialog,
     AlertDialogAction,
@@ -12,17 +12,21 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from '../ui/alert-dialog'
-import type {UseMutationResult} from '@tanstack/react-query'
-import {useState} from "react";
+import {useMutation, useQueryClient} from '@tanstack/react-query'
+import React, {useState} from "react";
 import {Input} from "@/components/ui/input.tsx";
+import {EditExpenses} from "@/components/expense/EditExpenses.tsx";
+import {toast} from "sonner";
 
 type Props = {
     expenses: Expense[]
-    deleteMutation: UseMutationResult<unknown, Error, string, unknown>
-    handleDelete: (id: string) => void
+    showOnly?: boolean
 }
 
-export function ExpenseTable({expenses, deleteMutation, handleDelete}: Props) {
+export function ExpenseTable({expenses, showOnly = false}: Props) {
+    const queryClient = useQueryClient()
+    const [openEdit, setOpenEdit] = useState<boolean>(false)
+    const [editData, setEditData] = useState<IUpdateExpense | null>(null)
     const [page, setPage] = useState(1)
     const pageSize = 6
     const [search, setSearch] = useState('')
@@ -30,34 +34,68 @@ export function ExpenseTable({expenses, deleteMutation, handleDelete}: Props) {
         if (!search) return true
         return o.name.toString().includes(search.trim())
     })
+    const totalPrice = expenses.reduce((acc, i) => acc + i.price, 0)
     const totalPages = Math.ceil(filteredOrders.length / pageSize)
     const paginatedOrders = filteredOrders.slice((page - 1) * pageSize, page * pageSize)
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearch(e.target.value)
         setPage(1)
     }
+
+    function handleEditData(data: IUpdateExpense) {
+        setEditData(data)
+        setOpenEdit(true)
+    }
+
+    const deleteMutation = useMutation({
+        mutationFn: deleteExpense,
+        onSuccess: () => {
+            queryClient.invalidateQueries({queryKey: ['expenses']}).then()
+            toast.success('Xóa thành công')
+        },
+        onError: () => {
+            toast.error('Xóa thất bại')
+        },
+    })
+    const handleDelete = (id: string) => {
+        deleteMutation.mutate(id)
+    }
     return (
         <div className="flex flex-col flex-1 overflow-clip">
-            <div className="flex items-center gap-2">
-                <Input
-                    placeholder="Tìm theo tên chi phí..."
-                    value={search}
-                    onChange={handleSearchChange}
-                    className="w-48 ml-2"
-                />
-                {search && (
-                    <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setPage(1) }}>
-                        Xóa
-                    </Button>
-                )}
+            <div className="flex gap-2 mb-2">
+                <div className="flex items-center gap-2">
+                    <span className='font-bold text-lg'>Tổng chi</span>
+                    <Input
+                        value={totalPrice.toLocaleString()}
+                        disabled
+                        className=" w-48 ml-2"
+                    />
+                </div>
+                <div className="flex items-center gap-2">
+                    <Input
+                        placeholder="Tìm theo tên chi phí..."
+                        value={search}
+                        onChange={handleSearchChange}
+                        className="w-48 ml-2"
+                    />
+                    {search && (
+                        <Button variant="ghost" size="sm" onClick={() => {
+                            setSearch('');
+                            setPage(1)
+                        }}>
+                            Xóa
+                        </Button>
+                    )}
+                </div>
             </div>
+
             <Table>
                 <TableHeader className="sticky top-0 bg-white z-10">
                     <TableRow>
                         <TableHead>Tên</TableHead>
                         <TableHead>Giá</TableHead>
                         <TableHead>Chú thích</TableHead>
-                        <TableHead>Hành động</TableHead>
+                        {!showOnly && <TableHead>Hành động</TableHead>}
                     </TableRow>
                 </TableHeader>
 
@@ -76,14 +114,15 @@ export function ExpenseTable({expenses, deleteMutation, handleDelete}: Props) {
                                 <TableCell>{exp.name}</TableCell>
                                 <TableCell>{exp.price.toLocaleString()}</TableCell>
                                 <TableCell>{exp.note}</TableCell>
-
-                                <TableCell>
-                                    <Button variant='default'>Sửa</Button>
+                                {!showOnly && <TableCell>
+                                    <Button variant='default' className='w-20'
+                                            onClick={() => handleEditData(exp)}>Sửa</Button>
 
                                     {/* Confirm Delete */}
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
-                                            <Button className='ml-2' variant='destructive' disabled={isDeleting}>
+                                            <Button className='ml-2 w-20' variant='destructive'
+                                                    disabled={isDeleting}>
                                                 Xóa
                                             </Button>
                                         </AlertDialogTrigger>
@@ -110,7 +149,8 @@ export function ExpenseTable({expenses, deleteMutation, handleDelete}: Props) {
                                             </AlertDialogFooter>
                                         </AlertDialogContent>
                                     </AlertDialog>
-                                </TableCell>
+                                </TableCell>}
+
                             </TableRow>
                         )
                     })}
@@ -131,6 +171,10 @@ export function ExpenseTable({expenses, deleteMutation, handleDelete}: Props) {
                     </Button>
                 </div>
             </div>
+            {openEdit && editData &&
+                <EditExpenses editData={editData} setEditData={setEditData} open={openEdit} onClose={() => {
+                    setOpenEdit(false)
+                }}/>}
         </div>
 
     )

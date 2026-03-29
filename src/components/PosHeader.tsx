@@ -5,8 +5,11 @@ import type {Order} from "@/api/order.ts";
 import React from "react";
 import {Button} from "@/components/ui/button.tsx";
 import {toast} from "sonner";
+import {getPaymentMethodByType, getPriceByType} from "@/lib/utils.ts";
+import type {Item} from "@/api/item.ts";
 
 type Props = {
+    items: Item[];
     isDetail: boolean,
     isPendingOrder: boolean,
     totalPrice: number
@@ -21,6 +24,7 @@ type Props = {
 
 function PosHeader({
                        currentOrder,
+                       items,
                        isPendingOrder,
                        isDetail,
                        totalPrice,
@@ -32,28 +36,38 @@ function PosHeader({
                        handlePendingOrder
                    }: Props) {
     return (
-        <div className='flex items-center p-2 justify-start gap-2 md:gap-4 border-b pb-2 border-[#ccc]'>
+        <div className='flex items-center p-2 justify-start gap-2 border-b pb-2 border-[#ccc]'>
             <div className='flex items-center space-x-2 '>
                 <Label htmlFor='username' className='whitespace-nowrap'>
                     Mã Đơn:
                 </Label>
                 <Input id='stt' className='w-15' value={currentOrderNumber} disabled/>
             </div>
-            <ToggleGroup size='lg' variant='outline' type='single' value={currentOrder.type}>
-                <ToggleGroupItem
-                    value='takeaway'
-                    onClick={() => {
-                        setCurrentOrder((prev) => ({...prev, type: 'takeaway'}))
-                    }}>
-                    外帶
-                </ToggleGroupItem>
-                <ToggleGroupItem
-                    value='dine_in'
-                    onClick={() => {
-                        setCurrentOrder((prev) => ({...prev, type: 'dine_in'}))
-                    }}>
-                    內用
-                </ToggleGroupItem>
+            <ToggleGroup
+                size='lg'
+                variant='outline'
+                type='single'
+                value={currentOrder.type}
+                onValueChange={(value) => {
+                    if (value) setCurrentOrder((prev) => ({
+                        ...prev,
+                        type: value as 'dine_in' | 'takeaway' | 'uber' | 'foodpanda',
+                        paymentMethod: getPaymentMethodByType(value as 'dine_in' | 'takeaway' | 'uber' | 'foodpanda'),
+                        items: prev.items.map((item) => {
+                            const originItem = items.find((i) => i._id === item.id)
+                            if (originItem) return {
+                                ...item,
+                                basePrice: getPriceByType(value as 'dine_in' | 'takeaway' | 'uber' | 'foodpanda', originItem.price)
+                            }
+                            return item
+                        })
+                    }))
+                }}
+            >
+                <ToggleGroupItem value='takeaway'>外帶</ToggleGroupItem>
+                <ToggleGroupItem value='dine_in'>內用</ToggleGroupItem>
+                <ToggleGroupItem value='uber'>Uber</ToggleGroupItem>
+                <ToggleGroupItem value='foodpanda'>FoodPanda</ToggleGroupItem>
             </ToggleGroup>
 
             <div className='flex-1'></div>
@@ -61,7 +75,7 @@ function PosHeader({
                 <Label htmlFor='username' className='whitespace-nowrap'>
                     Tổng tiền:
                 </Label>
-                <Input id='stt' className='w-30 md:w-40' value={totalPrice} disabled/>
+                <Input id='stt' className='w-30' value={totalPrice} disabled/>
             </div>
             <div className="w-45">
                 {(isDetail || isCheckout || isPendingOrder) ? (

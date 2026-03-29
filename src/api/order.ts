@@ -38,7 +38,7 @@ interface BaseOrder {
     status: 'pending' | 'paid' | 'cancelled'
     paymentMethod: PaymentMethod
     discount: OrderDiscount | null
-    type: 'dine_in' | 'takeaway'
+    type: 'dine_in' | 'takeaway' | 'uber' | 'foodpanda'
     customer: Customer | null
     checkoutPending: boolean
 
@@ -52,6 +52,11 @@ export interface IOrder extends BaseOrder {
     createdAt: Date
 }
 
+export type SalesByPayment = {
+    _id: string
+    totalSales: number
+    count: number
+}
 export const getOrders = async (days?: number): Promise<IOrder[]> => {
     const res = await api.get('orders', {params: days ? {days} : {}})
     return res.data.data
@@ -81,4 +86,8 @@ export const updateOrder = async (id: string, data: Partial<Order>): Promise<Ord
 export const deleteOrder = async (id: string) => {
     const res = await api.delete(`orders/${id}`)
     return res.data
+}
+export const getSalesByPayment = async (): Promise<Record<PaymentMethod, SalesByPayment>> => {
+    const res = await api.get('/orders/sales-by-payment')
+    return res.data.data
 }

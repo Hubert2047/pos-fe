@@ -9,6 +9,7 @@ import NumPad from "@/components/NumPad.tsx";
 import React from "react";
 import type {Order, OrderItem} from "@/api/order.ts";
 import {DEFAULT_ORDER_ITEM} from "@/constance";
+import {getPriceByType} from "@/lib/utils.ts";
 
 type Props = {
     isDetail: boolean
@@ -57,7 +58,7 @@ function PosItemSection({
             number: currentOrderNumber,
             name: item.name,
             variant,
-            basePrice: item.basePrice,
+            basePrice: getPriceByType(currentOrder.type, item.price),
         }))
         setSelectedItem(item)
     }

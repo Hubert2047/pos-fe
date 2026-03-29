@@ -1,7 +1,7 @@
 import {ToggleGroup, ToggleGroupItem} from "@/components/ui/toggle-group.tsx";
-import {DEFAULT_ORDER, PAYMENT_METHODS, type PaymentMethod} from "@/constance";
+import {DEFAULT_ORDER, type PaymentMethod} from "@/constance";
 import {createOrder, type Order} from "@/api/order.ts";
-import React, {type ReactElement, useState} from "react";
+import React, {type ReactElement, useMemo, useState} from "react";
 import {capitalize} from "@/lib/utils.ts";
 import {SiFoodpanda, SiLine, SiUber} from "react-icons/si";
 import type {Discount} from "@/api/discount.ts";
@@ -52,7 +52,7 @@ function Checkout({
     const createOrderMutation = useMutation({
         mutationFn: createOrder,
         onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ['orders']}).then();
+            queryClient.invalidateQueries({queryKey: ['orders', 'sale-by-payment']}).then();
         },
         onError: (error) => {
             console.error('Error creating order:', error);
@@ -91,6 +91,12 @@ function Checkout({
         }
     }
 
+    const paymentMethods = useMemo(() => {
+        if (currentOrder.type === 'dine_in' || currentOrder.type === 'takeaway') return ['cash', 'bank', 'linepay']
+        if (currentOrder.type === 'uber') return ['uber']
+        if (currentOrder.type === 'foodpanda') return ['foodpanda']
+        return []
+    }, [currentOrder.type])
     return (
         <div className='border flex gap-2 flex-1 border-[#ccc] rounded p-2'>
             {isPendingOrder ? <PendingOrder currentOrder={currentOrder} setCurrentOrder={setCurrentOrder}
@@ -136,13 +142,13 @@ function Checkout({
                                     setCurrentOrder((prev) => ({...prev, paymentMethod: value}))
                                 }
                             >
-                                {PAYMENT_METHODS.map((method) => (
+                                {paymentMethods.map((method) => (
                                     <ToggleGroupItem
                                         key={method}
                                         className='flex items-center justify-center w-max'
                                         value={method}
                                     >
-                                        <span>{PAYMENT_METHOD_ICONS[method]}</span>
+                                        <span>{PAYMENT_METHOD_ICONS[method as "cash" | "uber" | "linepay" | "bank" | "foodpanda"]}</span>
                                         <span className='w-max'>{capitalize(method)}</span>
                                     </ToggleGroupItem>
                                 ))}
