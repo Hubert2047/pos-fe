@@ -25,18 +25,22 @@ export interface IUpdateDailyClosing extends ICreateDailyClosing {
     _id: string
 }
 
-export const getRevenues = async (date?: string): Promise<IDailyClosing[]> => {
+export const getDailyClosings = async (date?: string): Promise<IDailyClosing[]> => {
     const res = await api.get('daily-closing', {
         params: date ? { date } : {},
     })
     return res.data.data
 }
+export const getClosingOfYesterday = async (): Promise<{ amount: number }> => {
+    const res = await api.get('daily-closing/yesterday')
+    return res.data.data
+}
 
-export const createRevenue = async (data: ICreateDailyClosing): Promise<IDailyClosing> => {
+export const createDailyClosing = async (data: ICreateDailyClosing): Promise<IDailyClosing> => {
     return api.post('daily-closing', data)
 }
 
-export const updateRevenue = async ({
+export const updateDailyClosing = async ({
     id,
     data,
 }: {
@@ -47,7 +51,7 @@ export const updateRevenue = async ({
     return res.data.data
 }
 
-export const deleteRevenue = async (id: string) => {
+export const deleteDailyClosing = async (id: string) => {
     const res = await api.delete(`daily-closing/${id}`)
     return res.data
 }

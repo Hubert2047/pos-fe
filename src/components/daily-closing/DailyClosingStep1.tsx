@@ -1,97 +1,91 @@
-import {ToggleGroup, ToggleGroupItem} from "@/components/ui/toggle-group.tsx";
-import {useState} from "react";
-import {Button} from "@/components/ui/button.tsx";
-import {ArrowRight} from "lucide-react";
-import {PAYMENT_METHODS, type PaymentMethod} from "@/constance";
-import {getPaymentMethodString} from "@/lib/utils.ts";
-import {Label} from "@/components/ui/label.tsx";
-import {Input} from "@/components/ui/input.tsx";
-import {ExpenseTable} from "@/components/expense/ExpenseTable.tsx";
-import {getSalesByPayment, type SalesByPayment} from "@/api/order.ts";
-import {useQuery} from "@tanstack/react-query";
-import {type Expense, getExpenses} from "@/api/expense.ts";
-import Loading from "@/components/Loading.tsx";
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group.tsx'
+import { useState } from 'react'
+import { Button } from '@/components/ui/button.tsx'
+import { ArrowRight } from 'lucide-react'
+import { PAYMENT_METHODS, type PaymentMethod } from '@/constance'
+import { getPaymentMethodString } from '@/lib/utils.ts'
+import { Label } from '@/components/ui/label.tsx'
+import { Input } from '@/components/ui/input.tsx'
+import { ExpenseTable } from '@/components/expense/ExpenseTable.tsx'
+import Loading from '@/components/Loading.tsx'
+import type { SalesByPayment } from '@/api/order'
+import type { Expense } from '@/api/expense'
 
 type Props = {
+    expenses: Expense[]
+    salesData: Record<PaymentMethod, SalesByPayment>
+    isSalesLoading: boolean
+    isExpenseLoading: boolean
     setCurrentStep: React.Dispatch<React.SetStateAction<number>>
 }
 
-function DailyClosingStep1({setCurrentStep}: Props) {
-    const {data = {} as Record<PaymentMethod, SalesByPayment>, isLoading} = useQuery<
-        Record<PaymentMethod, SalesByPayment>,
-        Error
-    >({
-        queryKey: ['sale-by-payment'],
-        queryFn: getSalesByPayment,
-        staleTime: 5 * 60 * 1000,
-    })
-    const {data: expenses = [], isLoading: isExpenseLoading} = useQuery<Expense[], Error>({
-        queryKey: ['expenses'],
-        queryFn: () => getExpenses(),
-        staleTime: 5 * 60 * 1000,
-    })
+function DailyClosingStep1({ expenses, salesData, isSalesLoading, isExpenseLoading, setCurrentStep }: Props) {
     const [type, setType] = useState<'income' | 'expense'>('income')
 
     function getPaymentMethodValue(type: PaymentMethod) {
-        const value = data[type]
-        if (!value) return {count: 0, totalSales: 0}
+        const value = salesData[type]
+        if (!value) return { count: 0, totalSales: 0 }
         return value
     }
 
-    const totalSales = Object.values(data).reduce((sum, item) => {
+    const totalSales = Object.values(salesData).reduce((sum, item) => {
         return sum + (item?.totalSales ?? 0)
     }, 0)
     return (
         <>
             <div className='flex justify-between'>
                 <ToggleGroup
-                    size="lg"
-                    variant="outline"
-                    type="single"
+                    size='lg'
+                    variant='outline'
+                    type='single'
                     value={type}
                     onValueChange={(value) => {
                         if (value) setType(value as 'income' | 'expense')
-                    }}
-                >
-                    <ToggleGroupItem className="w-20" value="income">
+                    }}>
+                    <ToggleGroupItem className='w-20' value='income'>
                         Thu nhập
                     </ToggleGroupItem>
-                    <ToggleGroupItem className="w-20" value="expense">
+                    <ToggleGroupItem className='w-20' value='expense'>
                         Chi ra
                     </ToggleGroupItem>
                 </ToggleGroup>
-                <Button className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white"
-                        onClick={() => setCurrentStep(2)}>
+                <Button
+                    className='flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white'
+                    onClick={() => setCurrentStep(2)}>
                     Tiếp theo
-                    <ArrowRight className="w-4 h-4"/>
+                    <ArrowRight className='w-4 h-4' />
                 </Button>
             </div>
 
-            {type === 'income' ?
+            {type === 'income' ? (
                 <div className='flex border border-[#ccc] py-4 rounded px-6 flex-col gap-1 justify-center'>
-                    {!isLoading && PAYMENT_METHODS.map((method) => {
-                        return <div key={method} className='variant flex justify-start items-center gap-4 pt-2'>
-                            <Label className='block w-28 font-semibold'>{getPaymentMethodString(method)}</Label>
-                            <Input
-                                id={`amount-${method}`}
-                                value={getPaymentMethodValue(method).totalSales.toLocaleString()}
-                                className="w-40 text-center"
-                                disabled
-                            />
-                        </div>
-                    })}
+                    {!isSalesLoading &&
+                        PAYMENT_METHODS.map((method) => {
+                            return (
+                                <div key={method} className='variant flex justify-start items-center gap-4 pt-2'>
+                                    <Label className='block w-28 font-semibold'>{getPaymentMethodString(method)}</Label>
+                                    <Input
+                                        id={`amount-${method}`}
+                                        value={getPaymentMethodValue(method).totalSales.toLocaleString()}
+                                        className='w-40 text-center'
+                                        disabled
+                                    />
+                                </div>
+                            )
+                        })}
                     <div className='variant flex justify-start items-center gap-4 pt-6 border-t mt-4'>
                         <Label className='block w-28 font-semibold'>Tổng</Label>
-                        <Input id='amount' value={totalSales.toLocaleString()} className='w-40 text-center'
-                               disabled/>
+                        <Input id='amount' value={totalSales.toLocaleString()} className='w-40 text-center' disabled />
                     </div>
-                </div> :
+                </div>
+            ) : (
                 <div className='flex border border-[#ccc] px-6 py-4 rounded'>
-                    {!isExpenseLoading && <ExpenseTable showOnly expenses={expenses}/>}
-                </div>}
-            {isLoading && <Loading/>}
+                    {!isExpenseLoading && <ExpenseTable showOnly expenses={expenses} />}
+                </div>
+            )}
+            {isSalesLoading && <Loading />}
         </>
-    );
+    )
 }
 
-export default DailyClosingStep1;
+export default DailyClosingStep1
