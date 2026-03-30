@@ -1,20 +1,31 @@
-import React, { useState } from 'react'
-import { Button } from '@/components/ui/button.tsx'
-import { ArrowLeft } from 'lucide-react'
-import { Label } from '@/components/ui/label.tsx'
-import { Input } from '@/components/ui/input.tsx'
-import { Textarea } from '@/components/ui/textarea'
+import React, {useState} from 'react'
+import {Button} from '@/components/ui/button.tsx'
+import {ArrowLeft} from 'lucide-react'
+import {Label} from '@/components/ui/label.tsx'
+import {Input} from '@/components/ui/input.tsx'
+import {Textarea} from '@/components/ui/textarea'
 import NumPad from '@/components/NumPad.tsx'
-import { createDailyClosing, type CashData, type ICreateDailyClosing } from '@/api/daily-closing'
-import { toast } from 'sonner'
+import {createDailyClosing, type CashData, type ICreateDailyClosing} from '@/api/daily-closing'
+import {toast} from 'sonner'
 import Loading from '../Loading'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import {useMutation, useQueryClient} from '@tanstack/react-query'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger
+} from "@/components/ui/alert-dialog.tsx";
 
 type Props = {
     systemAmount: number
     setCurrentStep: React.Dispatch<React.SetStateAction<number>>
+    onClose: () => void
 }
-function DailyClosingStep2({ systemAmount, setCurrentStep }: Props) {
+
+function DailyClosingStep2({systemAmount, setCurrentStep, onClose}: Props) {
     const queryClient = useQueryClient()
     const [cash, setCash] = useState<CashData>({
         2000: '0',
@@ -32,7 +43,7 @@ function DailyClosingStep2({ systemAmount, setCurrentStep }: Props) {
     const createDailyClosingMutation = useMutation({
         mutationFn: createDailyClosing,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['closing-of-yesterday'] }).then()
+            queryClient.invalidateQueries({queryKey: ['closing-of-yesterday']}).then()
         },
         onError: () => {
             toast.error('Kết toán không thành công')
@@ -42,6 +53,7 @@ function DailyClosingStep2({ systemAmount, setCurrentStep }: Props) {
         return acc + Number(denom) * Number(countStr || 0)
     }, 0)
     const diff = actualTotal - systemAmount
+
     async function handleConfirm() {
         const newDailyClosing: ICreateDailyClosing = {
             actualTotal,
@@ -51,15 +63,17 @@ function DailyClosingStep2({ systemAmount, setCurrentStep }: Props) {
         }
         await createDailyClosingMutation.mutateAsync(newDailyClosing)
         toast.success('Kết toán thành công')
+        onClose()
     }
+
     return (
-        <div className='flex flex-col border p-4 rounded border-[#ccc]'>
+        <div className='flex flex-col border px-4 pb-2 rounded border-[#ccc]'>
             <div className='flex relative'>
                 <Button
-                    className='flex absolute -top-14 -left-4 items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white'
+                    className='flex absolute -top-10 -left-4 items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white'
                     onClick={() => setCurrentStep(1)}>
                     Quay lại
-                    <ArrowLeft className='w-4 h-4' />
+                    <ArrowLeft className='w-4 h-4'/>
                 </Button>
                 <p className='text-center flex-1 font-bold text-xl'>Kiểm tiền</p>
             </div>
@@ -83,12 +97,13 @@ function DailyClosingStep2({ systemAmount, setCurrentStep }: Props) {
                         .map((denom) => (
                             <div key={denom} className='variant flex justify-start items-center gap-4 pl-2'>
                                 <Label
-                                    className={`block w-12 font-semibold ${focusedDenom === denom ? 'text-blue-500' : ''}`}>
+                                    className={`block w-12 font-semibold ${focusedDenom === denom ? 'text-blue-500' : ''}`}
+                                    onClick={() => setFocusedDenom(denom)}>
                                     {denom}
                                 </Label>
                                 <Input
                                     type='number'
-                                    value={cash[denom]}
+                                    value={Number(cash[denom])}
                                     onFocus={() => setFocusedDenom(denom)}
                                     onChange={(e) =>
                                         setCash((prev) => ({
@@ -101,10 +116,10 @@ function DailyClosingStep2({ systemAmount, setCurrentStep }: Props) {
                             </div>
                         ))}
                 </div>
-                <div className='flex gap-2 flex-col'>
+                <div className='flex gap-2 flex-1 flex-col'>
                     <div className='variant flex justify-start items-center gap-4 pl-2'>
                         <Label className='block w-30 font-semibold'>Thực tế</Label>
-                        <Input id='amount' value={actualTotal.toLocaleString()} disabled className='w-20 text-center' />
+                        <Input id='amount' value={actualTotal.toLocaleString()} disabled className='w-20 text-center'/>
                     </div>
                     <div className='variant flex justify-start items-center gap-4 pl-2'>
                         <Label className='block w-30 font-semibold'>Hệ thống</Label>
@@ -117,21 +132,47 @@ function DailyClosingStep2({ systemAmount, setCurrentStep }: Props) {
                     </div>
                     <div className='variant flex justify-start items-center gap-4 pl-2'>
                         <Label className='block w-30 font-semibold'>Chênh lệch</Label>
-                        <Input id='amount' value={diff.toLocaleString()} disabled className='w-20 text-center' />
+                        <Input id='amount' value={diff.toLocaleString()} disabled className='w-20 text-center'/>
                     </div>
                     <div className='variant flex justify-start items-center gap-4 pl-2'>
-                        <Label className='block w-30 font-semibold'>Nguyên nhân</Label>
+                        <Label className='block w-40 font-semibold'>Nguyên nhân</Label>
                         <Textarea
                             id='amount'
                             value={reason}
-                            className='w-50 min-h-20'
+                            className='w-full min-h-20'
                             onChange={(e) => setReason(e.target.value)}
                         />
                     </div>
-                    <Button className='mt-6 bg-green-500 text-black' size='lg' onClick={handleConfirm}></Button>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button className='ml-2 w-full mt-4 bg-green-500 text-black' variant='destructive'>
+                                Kết toán
+                            </Button>
+                        </AlertDialogTrigger>
+
+                        <AlertDialogContent className='max-w-sm p-4'>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle className='text-black! text-lg!'>
+                                    Bạn có chắc muốn kết toán không?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Mỗi ngày chỉ được phép kết toán một lần.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Huỷ</AlertDialogCancel>
+                                <AlertDialogAction
+                                    onClick={handleConfirm}
+                                    disabled={createDailyClosingMutation.isPending}
+                                    className='bg-green-500! text-black!'>
+                                    {createDailyClosingMutation.isPending ? 'Đang lưu...' : 'Kết toán'}
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </div>
             </div>
-            {createDailyClosingMutation.isPending && <Loading />}
+            {createDailyClosingMutation.isPending && <Loading/>}
         </div>
     )
 }

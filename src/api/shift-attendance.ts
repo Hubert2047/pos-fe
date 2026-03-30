@@ -9,7 +9,11 @@ export interface IShiftAttendance {
     status: 'working' | 'done'
     date: string
 }
-export const checkInOrOut = async (numberId: string): Promise<IShiftAttendance> => {
-    const res = await api.post('shift-attendance/check-in-out', {numberId})
+export const checkIn = async (numberId: string): Promise<IShiftAttendance> => {
+    const res = await api.post('shift-attendance/check-in', {numberId})
+    return res.data.data
+}
+export const checkOut = async (numberId: string): Promise<IShiftAttendance> => {
+    const res = await api.post('shift-attendance/check-out', {numberId})
     return res.data.data
 }
