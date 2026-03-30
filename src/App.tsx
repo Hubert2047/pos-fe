@@ -5,6 +5,7 @@ import LoginPage from '@/pages/LoginPage'
 import POSPage from '@/pages/POSPage'
 import { AuthProvider } from './stores/auth-store'
 import ProtectedRoute from './components/ProtectedRoute'
+import RootRedirect from './components/RootRedirect'
 
 const queryClient = new QueryClient()
 
@@ -15,7 +16,7 @@ const App: React.FC = () => {
                 <BrowserRouter>
                     <Routes>
                         {/* Public */}
-                        <Route path='/' element={<Navigate to='/login' replace />} />
+                        <Route path='/' element={<RootRedirect />} />
                         <Route path='/login' element={<LoginPage />} />
                         <Route
                             path='/unauthorized'
