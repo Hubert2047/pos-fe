@@ -20,7 +20,7 @@ export interface IUpdateRevenue extends ICreateOtherRevenue {
 }
 
 export const getRevenues = async (date?: string): Promise<Revenue[]> => {
-    const res = await api.get('revenues', {
+    const res = await api.get('other-revenues', {
         params: date ? {date} : {}
     })
     return res.data.data
@@ -28,14 +28,14 @@ export const getRevenues = async (date?: string): Promise<Revenue[]> => {
 
 
 export const createRevenue = async (data: ICreateOtherRevenue): Promise<Revenue> => {
-    return api.post('revenues', data)
+    return api.post('other-revenues', data)
 }
 
 export const updateRevenue = async ({id, data}: {
     id: string
-    data: Partial<ICreateOtherRevenue>
+    data: Partial<IUpdateRevenue>
 }): Promise<IUpdateRevenue> => {
-    const res = await api.put(`revenues/${id}`, data)
+    const res = await api.put(`other-revenues/${id}`, data)
     return res.data.data
 }
 

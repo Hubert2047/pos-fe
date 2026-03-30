@@ -5,14 +5,11 @@ import {Label} from "@/components/ui/label.tsx";
 import {Input} from "@/components/ui/input.tsx";
 import {Textarea} from "@/components/ui/textarea"
 import NumPad from "@/components/NumPad.tsx";
+import type { CashData } from "@/api/daily-closing";
 
 type Props = {
     setCurrentStep: React.Dispatch<React.SetStateAction<number>>
 }
-type CashData = {
-    [denomination: number]: string;
-}
-
 function DailyClosingStep2({setCurrentStep}: Props) {
     const [cash, setCash] = useState<CashData>({
         2000: "0",
