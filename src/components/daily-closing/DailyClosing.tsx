@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import { type Expense, getExpenses } from '@/api/expense.ts'
 import type { PaymentMethod } from '@/constance'
 import { getRevenues, type Revenue } from '@/api/other-revenue'
-import { getClosingOfYesterday, type IDailyClosing } from '@/api/daily-closing'
+import { getClosingOfYesterday } from '@/api/daily-closing'
 type Props = {
     open: boolean
     onClose: () => void

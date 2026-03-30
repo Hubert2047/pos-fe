@@ -1,9 +1,8 @@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group.tsx'
-import { DEFAULT_ORDER, type PaymentMethod } from '@/constance'
-import { createOrder, type Order } from '@/api/order.ts'
-import React, { type ReactElement, useMemo, useState } from 'react'
+import { DEFAULT_ORDER, PAYMENT_METHOD_ICONS, type PaymentMethod } from '@/constance'
+import { createOrder, type ICreateOrder } from '@/api/order.ts'
+import React, {  useMemo, useState } from 'react'
 import { capitalize } from '@/lib/utils.ts'
-import { SiFoodpanda, SiLine, SiUber } from 'react-icons/si'
 import type { Discount } from '@/api/discount.ts'
 import { Label } from '@/components/ui/label.tsx'
 import { Input } from '@/components/ui/input.tsx'
@@ -14,21 +13,14 @@ import { toast } from 'sonner'
 import Loading from '@/components/Loading.tsx'
 import PendingOrder from '@/components/PendingOrder.tsx'
 
-const PAYMENT_METHOD_ICONS: Record<PaymentMethod, ReactElement> = {
-    cash: <span>💵</span>,
-    uber: <SiUber className='w-5 h-5 ' />,
-    linepay: <SiLine className='w-5 h-5 ' />,
-    bank: <span>🏦</span>,
-    foodpanda: <SiFoodpanda className='w-5 h-5' />,
-}
 type Props = {
     isPendingOrder: boolean
     isCheckoutPendingOrder: boolean
     currentOrderNumber: number
     totalPrice: number
     discounts: Discount[]
-    currentOrder: Order
-    setCurrentOrder: React.Dispatch<React.SetStateAction<Order>>
+    currentOrder: ICreateOrder
+    setCurrentOrder: React.Dispatch<React.SetStateAction<ICreateOrder>>
     setCurrentOrderNumber: React.Dispatch<React.SetStateAction<number>>
     handleOpenCheckout(checkout: boolean): void
     handlePendingOrder(open: boolean): void
@@ -52,14 +44,16 @@ function Checkout({
     const createOrderMutation = useMutation({
         mutationFn: createOrder,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['orders', 'sale-by-payment'] }).then()
+              queryClient.invalidateQueries({
+                predicate: (query) => query.queryKey[0] === 'sale-by-payment' || query.queryKey[0] === 'orders',
+            })
         },
         onError: () => {
             toast.error('Tạo đơn không thành công')
         },
     })
     const handleCreateOrder = async (status: 'paid' | 'pending') => {
-        const newOrder: Order = {
+        const newOrder: ICreateOrder = {
             ...currentOrder,
             number: currentOrderNumber,
             status: status,

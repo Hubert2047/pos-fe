@@ -1,12 +1,12 @@
 import {Label} from "@/components/ui/label.tsx";
 import {Input} from "@/components/ui/input.tsx";
 import {Button} from "@/components/ui/button.tsx";
-import type {Order} from "@/api/order.ts";
+import type {ICreateOrder} from "@/api/order.ts";
 import React from "react";
 
 type Props = {
-    currentOrder: Order
-    setCurrentOrder: React.Dispatch<React.SetStateAction<Order>>
+    currentOrder: ICreateOrder
+    setCurrentOrder: React.Dispatch<React.SetStateAction<ICreateOrder>>
     handleCreateOrder(
         status: "paid" | "pending",
     ): Promise<void>

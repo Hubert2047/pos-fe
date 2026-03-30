@@ -12,7 +12,7 @@ import {
 } from '../ui/alert-dialog'
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query'
 import {Dialog, DialogContent, DialogHeader, DialogTitle} from "@/components/ui/dialog.tsx";
-import {cancelOrder, getOrders, type Order, type IOrder} from "@/api/order.ts";
+import {cancelOrder, getOrders, type ICreateOrder, type IOrder} from "@/api/order.ts";
 import {getOrderTypeString, getPaymentMethodString, getStatusString} from "@/lib/utils.ts";
 import Loading from "@/components/Loading.tsx";
 import {toast} from "sonner";
@@ -22,9 +22,9 @@ import {Input} from "@/components/ui/input.tsx";
 type Props = {
     open: boolean
     displayOrderDetail(
-        order: Order,
+        order: ICreateOrder,
     ): void
-    checkoutPendingOrder(order: Order): void
+    checkoutPendingOrder(order: ICreateOrder): void
     onClose: () => void
 }
 

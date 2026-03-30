@@ -1,5 +1,5 @@
 import api from './axios'
-import type {PaymentMethod} from "@/constance";
+import type { PaymentMethod } from '@/constance'
 
 export interface OrderItem {
     id: string
@@ -31,7 +31,7 @@ export interface OrderDiscount {
     type: 'percent' | 'value'
 }
 
-interface BaseOrder {
+export interface BaseOrder {
     _id: string
     number: number
     items: OrderItem[]
@@ -41,45 +41,42 @@ interface BaseOrder {
     type: 'dine_in' | 'takeaway' | 'uber' | 'foodpanda'
     customer: Customer | null
     checkoutPending: boolean
-
 }
-
-export type Order = BaseOrder
 
 export interface IOrder extends BaseOrder {
     _id: string
     totalPrice: number
     createdAt: Date
 }
-
 export type SalesByPayment = {
     _id: string
     totalSales: number
     count: number
 }
 export const getOrders = async (days?: number): Promise<IOrder[]> => {
-    const res = await api.get('orders', {params: days ? {days} : {}})
+    const res = await api.get('orders', { params: days ? { days } : {} })
     return res.data.data
 }
 export const getNextOrderNumber = async (): Promise<number> => {
     const res = await api.get('orders/next-order-number')
     return res.data.nextNumber
 }
-export const fetchOrderById = async (id: string): Promise<Order> => {
+export const fetchOrderById = async (id: string): Promise<IOrder> => {
     const res = await api.get(`orders/${id}`)
     return res.data.data
 }
 
-export const createOrder = async (order: Order): Promise<number> => {
+export const createOrder = async (order: BaseOrder): Promise<number> => {
     const res = await api.post('orders', order)
     return res.data.data
 }
-export const cancelOrder = async (id: string): Promise<Order> => {
+export const cancelOrder = async (id: string): Promise<BaseOrder> => {
     const res = await api.patch(`orders/${id}/cancel`)
     return res.data.data
 }
-export const updateOrder = async (id: string, data: Partial<Order>): Promise<Order> => {
-    const res = await api.put(`orders/${id}`, data)
+
+export const updateOrderPayment = async ({ id, data }: { id: string; data: Partial<{paymentMethod:string}> }): Promise<BaseOrder> => {
+    const res = await api.put(`orders/payment/${id}`, data)
     return res.data.data
 }
 
