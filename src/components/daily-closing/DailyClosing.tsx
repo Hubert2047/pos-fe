@@ -59,13 +59,14 @@ function DailyClosing({ open, onClose }: Props) {
                     {currentStep === 1 && (
                         <DailyClosingStep1
                             expenses={expenses}
+                            totalOtherRevenues={totalOtherRevenues}
                             salesData={salesData}
                             isExpenseLoading={isExpenseLoading}
                             isSalesLoading={isSalesLoading}
                             setCurrentStep={setCurrentStep}
                         />
                     )}
-                    {currentStep === 2 && <DailyClosingStep2 systemAmount={systemAmount} setCurrentStep={setCurrentStep} />}
+                    {currentStep === 2 && <DailyClosingStep2 systemAmount={systemAmount} setCurrentStep={setCurrentStep} onClose={onClose}/>}
                 </DialogContent>
             </Dialog>
         </>

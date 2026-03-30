@@ -1,6 +1,6 @@
-import type {ICreateOrder, OrderItem} from "@/api/order.ts";
-import type { ReactElement } from "react";
-import { SiFoodpanda, SiLine, SiUber } from "react-icons/si";
+import type {BaseOrder, OrderItem} from "@/api/order.ts";
+import type {ReactElement} from "react";
+import {SiFoodpanda, SiLine, SiUber} from "react-icons/si";
 
 export const DEFAULT_ORDER_ITEM: OrderItem = {
     id: '',
@@ -13,7 +13,7 @@ export const DEFAULT_ORDER_ITEM: OrderItem = {
     noteOptions: [],
     note: '',
 }
-export const DEFAULT_ORDER: ICreateOrder = {
+export const DEFAULT_ORDER: BaseOrder = {
     _id: "",
     number: 1,
     items: [],
@@ -29,8 +29,8 @@ export const PAYMENT_METHODS = ['cash', 'uber', 'linepay', 'bank', 'foodpanda'] 
 export const TOKEN_STORAGE_KEY = 'token'
 export const PAYMENT_METHOD_ICONS: Record<PaymentMethod, ReactElement> = {
     cash: <span>💵</span>,
-    uber: <SiUber className='w-5 h-5 ' />,
-    linepay: <SiLine className='w-5 h-5 ' />,
+    uber: <SiUber className='w-5 h-5 '/>,
+    linepay: <SiLine className='w-5 h-5 '/>,
     bank: <span>🏦</span>,
-    foodpanda: <SiFoodpanda className='w-5 h-5' />,
+    foodpanda: <SiFoodpanda className='w-5 h-5'/>,
 }

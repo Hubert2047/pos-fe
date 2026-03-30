@@ -1,6 +1,6 @@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group.tsx'
 import { DEFAULT_ORDER, PAYMENT_METHOD_ICONS, type PaymentMethod } from '@/constance'
-import { createOrder, type ICreateOrder } from '@/api/order.ts'
+import {type BaseOrder, createOrder} from '@/api/order.ts'
 import React, {  useMemo, useState } from 'react'
 import { capitalize } from '@/lib/utils.ts'
 import type { Discount } from '@/api/discount.ts'
@@ -19,8 +19,8 @@ type Props = {
     currentOrderNumber: number
     totalPrice: number
     discounts: Discount[]
-    currentOrder: ICreateOrder
-    setCurrentOrder: React.Dispatch<React.SetStateAction<ICreateOrder>>
+    currentOrder: BaseOrder
+    setCurrentOrder: React.Dispatch<React.SetStateAction<BaseOrder>>
     setCurrentOrderNumber: React.Dispatch<React.SetStateAction<number>>
     handleOpenCheckout(checkout: boolean): void
     handlePendingOrder(open: boolean): void
@@ -41,19 +41,24 @@ function Checkout({
     setIsCheckoutPendingOrder,
 }: Props) {
     const queryClient = useQueryClient()
+    const [cash, setCash] = useState<number>(totalPrice)
     const createOrderMutation = useMutation({
         mutationFn: createOrder,
         onSuccess: () => {
               queryClient.invalidateQueries({
-                predicate: (query) => query.queryKey[0] === 'sale-by-payment' || query.queryKey[0] === 'orders',
-            })
+                  predicate: (query) => query.queryKey[0] === 'sale-by-payment' || query.queryKey[0] === 'orders',
+              }).then()
         },
         onError: () => {
             toast.error('Tạo đơn không thành công')
         },
     })
     const handleCreateOrder = async (status: 'paid' | 'pending') => {
-        const newOrder: ICreateOrder = {
+        if(cash<totalPrice) {
+            toast.error('Tiền khách đưa chưa đủ')
+            return
+        }
+        const newOrder: BaseOrder = {
             ...currentOrder,
             number: currentOrderNumber,
             status: status,
@@ -67,7 +72,7 @@ function Checkout({
         setIsCheckoutPendingOrder(false)
         toast.success(status === 'paid' ? 'Thanh toán thành công' : 'Đặt hàng thành công')
     }
-    const [cash, setCash] = useState<number>(totalPrice)
+
     const cashBack = cash - totalPrice < 0 ? 0 : cash - totalPrice
 
     function onDiscountChange(value: string) {

@@ -263,7 +263,7 @@ function PosItemSection({
                             ['dine_in', 'takeaway'].includes(currentOrder.type) &&
                             ['cash', 'linepay', 'bank'].includes(currentOrder.paymentMethod) && (
                                 <div className='flex gap-2 items-center'>
-                                    <p className='font-bold'>Phương thức thanh toán</p>
+                                    <p className='font-semibold block w-25 text-start text-md'>Hình thức thanh toán</p>
                                     <div className='flex justify-start items-center gap-4'>
                                         <ToggleGroup
                                             size='lg'

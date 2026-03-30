@@ -1,17 +1,18 @@
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group.tsx'
-import { useState } from 'react'
-import { Button } from '@/components/ui/button.tsx'
-import { ArrowRight } from 'lucide-react'
-import { PAYMENT_METHODS, type PaymentMethod } from '@/constance'
-import { getPaymentMethodString } from '@/lib/utils.ts'
-import { Label } from '@/components/ui/label.tsx'
-import { Input } from '@/components/ui/input.tsx'
-import { ExpenseTable } from '@/components/expense/ExpenseTable.tsx'
+import {ToggleGroup, ToggleGroupItem} from '@/components/ui/toggle-group.tsx'
+import React, {useState} from 'react'
+import {Button} from '@/components/ui/button.tsx'
+import {ArrowRight} from 'lucide-react'
+import {PAYMENT_METHODS, type PaymentMethod} from '@/constance'
+import {getPaymentMethodString} from '@/lib/utils.ts'
+import {Label} from '@/components/ui/label.tsx'
+import {Input} from '@/components/ui/input.tsx'
+import {ExpenseTable} from '@/components/expense/ExpenseTable.tsx'
 import Loading from '@/components/Loading.tsx'
-import type { SalesByPayment } from '@/api/order'
-import type { Expense } from '@/api/expense'
+import type {SalesByPayment} from '@/api/order'
+import type {Expense} from '@/api/expense'
 
 type Props = {
+    totalOtherRevenues: number
     expenses: Expense[]
     salesData: Record<PaymentMethod, SalesByPayment>
     isSalesLoading: boolean
@@ -19,12 +20,19 @@ type Props = {
     setCurrentStep: React.Dispatch<React.SetStateAction<number>>
 }
 
-function DailyClosingStep1({ expenses, salesData, isSalesLoading, isExpenseLoading, setCurrentStep }: Props) {
+function DailyClosingStep1({
+                               expenses,
+                               totalOtherRevenues,
+                               salesData,
+                               isSalesLoading,
+                               isExpenseLoading,
+                               setCurrentStep
+                           }: Props) {
     const [type, setType] = useState<'income' | 'expense'>('income')
 
     function getPaymentMethodValue(type: PaymentMethod) {
         const value = salesData[type]
-        if (!value) return { count: 0, totalSales: 0 }
+        if (!value) return {count: 0, totalSales: 0}
         return value
     }
 
@@ -53,7 +61,7 @@ function DailyClosingStep1({ expenses, salesData, isSalesLoading, isExpenseLoadi
                     className='flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white'
                     onClick={() => setCurrentStep(2)}>
                     Tiếp theo
-                    <ArrowRight className='w-4 h-4' />
+                    <ArrowRight className='w-4 h-4'/>
                 </Button>
             </div>
 
@@ -61,12 +69,14 @@ function DailyClosingStep1({ expenses, salesData, isSalesLoading, isExpenseLoadi
                 <div className='flex border border-[#ccc] py-4 rounded px-6 flex-col gap-1 justify-center'>
                     {!isSalesLoading &&
                         PAYMENT_METHODS.map((method) => {
+                            let totalSales = getPaymentMethodValue(method).totalSales
+                            if (method === 'cash') totalSales += totalOtherRevenues
                             return (
                                 <div key={method} className='variant flex justify-start items-center gap-4 pt-2'>
                                     <Label className='block w-28 font-semibold'>{getPaymentMethodString(method)}</Label>
                                     <Input
                                         id={`amount-${method}`}
-                                        value={getPaymentMethodValue(method).totalSales.toLocaleString()}
+                                        value={totalSales.toLocaleString()}
                                         className='w-40 text-center'
                                         disabled
                                     />
@@ -75,15 +85,15 @@ function DailyClosingStep1({ expenses, salesData, isSalesLoading, isExpenseLoadi
                         })}
                     <div className='variant flex justify-start items-center gap-4 pt-6 border-t mt-4'>
                         <Label className='block w-28 font-semibold'>Tổng</Label>
-                        <Input id='amount' value={totalSales.toLocaleString()} className='w-40 text-center' disabled />
+                        <Input id='amount' value={totalSales.toLocaleString()} className='w-40 text-center' disabled/>
                     </div>
                 </div>
             ) : (
                 <div className='flex border border-[#ccc] px-6 py-4 rounded'>
-                    {!isExpenseLoading && <ExpenseTable showOnly expenses={expenses} />}
+                    {!isExpenseLoading && <ExpenseTable showOnly expenses={expenses}/>}
                 </div>
             )}
-            {isSalesLoading && <Loading />}
+            {isSalesLoading && <Loading/>}
         </>
     )
 }
