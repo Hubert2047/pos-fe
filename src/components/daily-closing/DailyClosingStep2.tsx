@@ -7,8 +7,8 @@ import { Textarea } from '@/components/ui/textarea'
 import NumPad from '@/components/NumPad.tsx'
 import { createDailyClosing, type CashData, type ICreateDailyClosing } from '@/api/daily-closing'
 import { toast } from 'sonner'
-import { useMutation, useQueryClient } from 'node_modules/@tanstack/react-query/build/modern/_tsup-dts-rollup'
 import Loading from '../Loading'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type Props = {
     systemAmount: number
@@ -27,14 +27,15 @@ function DailyClosingStep2({ systemAmount, setCurrentStep }: Props) {
         5: '0',
         1: '0',
     })
-    const[reason, setReason] = useState('')
-    const createOrderMutation = useMutation({
+    const [reason, setReason] = useState('')
+    const [focusedDenom, setFocusedDenom] = useState<number | null>(null)
+    const createDailyClosingMutation = useMutation({
         mutationFn: createDailyClosing,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['closing-of-yesterday'] }).then()
         },
-        onError: (error) => {
-            console.error('Error creating order:', error)
+        onError: () => {
+            toast.error('Kết toán không thành công')
         },
     })
     const actualTotal = Object.entries(cash).reduce((acc, [denom, countStr]) => {
@@ -42,18 +43,14 @@ function DailyClosingStep2({ systemAmount, setCurrentStep }: Props) {
     }, 0)
     const diff = actualTotal - systemAmount
     async function handleConfirm() {
-        try {
-            const newDailyClosing: ICreateDailyClosing = {
-                actualTotal,
-                systemAmount,
-                cash,
-                reason,
-            }
-            await createOrderMutation.mutateAsync(newDailyClosing)
-            toast.success('Kết toán thành công')
-        } catch {
-            toast.error('Kết toán không thành công')
+        const newDailyClosing: ICreateDailyClosing = {
+            actualTotal,
+            systemAmount,
+            cash,
+            reason,
         }
+        await createDailyClosingMutation.mutateAsync(newDailyClosing)
+        toast.success('Kết toán thành công')
     }
     return (
         <div className='flex flex-col border p-4 rounded border-[#ccc]'>
@@ -68,7 +65,16 @@ function DailyClosingStep2({ systemAmount, setCurrentStep }: Props) {
             </div>
             <div className='flex justify-between gap-6 mt-4'>
                 <div className='flex justify-center items-start mt-8 flex-1'>
-                    <NumPad currentValue={1} onChange={() => {}} />
+                    <NumPad
+                        currentValue={focusedDenom ? cash[focusedDenom] : "0"}
+                        onChange={(val) => {
+                            if (focusedDenom === null) return
+                            setCash((prev) => ({
+                                ...prev,
+                                [focusedDenom]: String(val),
+                            }))
+                        }}
+                    />
                 </div>
                 <div className='flex items-end gap-2 flex-col'>
                     {Object.keys(cash)
@@ -76,17 +82,21 @@ function DailyClosingStep2({ systemAmount, setCurrentStep }: Props) {
                         .sort((a, b) => b - a)
                         .map((denom) => (
                             <div key={denom} className='variant flex justify-start items-center gap-4 pl-2'>
-                                <Label className='block w-12 font-semibold'>{denom}</Label>
+                                <Label
+                                    className={`block w-12 font-semibold ${focusedDenom === denom ? 'text-blue-500' : ''}`}>
+                                    {denom}
+                                </Label>
                                 <Input
                                     type='number'
                                     value={cash[denom]}
+                                    onFocus={() => setFocusedDenom(denom)}
                                     onChange={(e) =>
                                         setCash((prev) => ({
                                             ...prev,
                                             [denom]: e.target.value,
                                         }))
                                     }
-                                    className='w-20 text-center'
+                                    className={`w-20 text-center ${focusedDenom === denom ? 'border-blue-500' : ''}`}
                                 />
                             </div>
                         ))}
@@ -111,12 +121,17 @@ function DailyClosingStep2({ systemAmount, setCurrentStep }: Props) {
                     </div>
                     <div className='variant flex justify-start items-center gap-4 pl-2'>
                         <Label className='block w-30 font-semibold'>Nguyên nhân</Label>
-                        <Textarea id='amount' value={reason} className='w-50 min-h-20' onChange={(e) => setReason(e.target.value)}/>
+                        <Textarea
+                            id='amount'
+                            value={reason}
+                            className='w-50 min-h-20'
+                            onChange={(e) => setReason(e.target.value)}
+                        />
                     </div>
                     <Button className='mt-6 bg-green-500 text-black' size='lg' onClick={handleConfirm}></Button>
                 </div>
             </div>
-             {createOrderMutation.isPending && <Loading />}
+            {createDailyClosingMutation.isPending && <Loading />}
         </div>
     )
 }

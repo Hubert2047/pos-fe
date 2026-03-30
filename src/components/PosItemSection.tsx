@@ -240,8 +240,8 @@ function PosItemSection({
                                 </div>
                             </>}
                         {!isDetail && <div className='flex justify-start pt-2 gap-3'>
-                            <NumPad currentValue={currentOrderItem.quantity} onChange={(value) => {
-                                setCurrentOrderItem((prev) => ({...prev, quantity: value}));
+                            <NumPad currentValue={currentOrderItem.quantity.toString()} onChange={(value) => {
+                                setCurrentOrderItem((prev) => ({...prev, quantity: Number(value)}));
                             }}/>
                             <div className="flex-1"></div>
                             <>

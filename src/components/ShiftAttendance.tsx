@@ -1,45 +1,63 @@
-import {Dialog, DialogContent, DialogHeader, DialogTitle} from "@/components/ui/dialog.tsx";
-import {Input} from "@/components/ui/input.tsx";
-import {useState} from "react";
-import {Button} from "@/components/ui/button.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog.tsx'
+import { Input } from '@/components/ui/input.tsx'
+import { useState } from 'react'
+import { Button } from '@/components/ui/button.tsx'
+import { checkInOrOut } from '@/api/shift-attendance'
+import { toast } from 'sonner'
+import NumPad from './NumPad'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type Props = {
     open: boolean
     onClose: () => void
 }
 
-function ShiftAttendance({open, onClose}: Props) {
-    const [staffId, setStaffId] = useState("");
+function ShiftAttendance({ open, onClose }: Props) {
+    const [numberId, setNumberId] = useState('')
+    const queryClient = useQueryClient()
+    const checkInOutMutation = useMutation({
+        mutationFn: checkInOrOut,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['shift-attendances'] }).then()
+        },
+        onError: () => {
+            toast.error('Chấm công không thành công')
+        },
+    })
+    const handleCheckInOut = async (status: 'check-in' | 'check-out') => {
+        await checkInOutMutation.mutateAsync(numberId)
+        toast.success(status === 'check-in' ? 'Chấm công vào làm thành công' : 'Chấm công tan làm thành công')
+    }
     return (
         <Dialog
             open={open}
             onOpenChange={(isOpen) => {
                 if (!isOpen) onClose()
             }}>
-            <DialogContent className=" min-h-[50vh] flex flex-col">
+            <DialogContent className=' min-h-[50vh] flex flex-col'>
                 <DialogHeader>
                     <DialogTitle className='text-black! font-bold! text-xl text-center'>Chấm công</DialogTitle>
                 </DialogHeader>
-                <div className="flex items-center gap-2 px-2">
+                <div className='flex items-center gap-2 px-2'>
                     <span className='font-bold text-md'>Mã nhân viên</span>
-                    <Input
-                        value={staffId}
-                        className=" w-48 ml-2"
-                        onChange={(e) => setStaffId(e.target.value)}
-                    />
+                    <Input value={numberId} className=' w-48 ml-2' onChange={(e) => setNumberId(e.target.value)} />
                 </div>
-                <div className="flex items-center justify-between mt-4 gap-2 px-2">
-                    <Button className="bg-green-500 hover:bg-green-600 text-white">
+                <div className='flex items-center justify-between mt-4 gap-2 px-2'>
+                    <NumPad currentValue={numberId} onChange={(value) => setNumberId(value)} />
+                    <Button
+                        className='bg-green-500 hover:bg-green-600 text-white'
+                        onClick={() => handleCheckInOut('check-in')}>
                         Vào làm
                     </Button>
-
-                    <Button className="bg-red-500 hover:bg-red-600 text-white">
+                    <Button
+                        className='bg-red-500 hover:bg-red-600 text-white'
+                        onClick={() => handleCheckInOut('check-out')}>
                         Tan làm
                     </Button>
                 </div>
             </DialogContent>
         </Dialog>
-    );
+    )
 }
 
-export default ShiftAttendance;
+export default ShiftAttendance
