@@ -1,19 +1,38 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import POSPage from './pages/POSPage'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import LoginPage from '@/pages/LoginPage'
+import POSPage from '@/pages/POSPage'
+import { AuthProvider } from './stores/auth-store'
+import ProtectedRoute from './components/ProtectedRoute'
 
 const queryClient = new QueryClient()
+
 const App: React.FC = () => {
     return (
         <QueryClientProvider client={queryClient}>
-            <BrowserRouter>
-                <Routes>
-                    <Route path='/' element={<Navigate to='/pos' replace />} />
-                    <Route path='/pos' element={<POSPage />} />
-                    <Route path='*' element={<div>404 Page Not Found</div>} />
-                </Routes>
-            </BrowserRouter>
+            <AuthProvider>
+                <BrowserRouter>
+                    <Routes>
+                        {/* Public */}
+                        <Route path='/' element={<Navigate to='/login' replace />} />
+                        <Route path='/login' element={<LoginPage />} />
+                        <Route
+                            path='/unauthorized'
+                            element={
+                                <div className='p-8 text-center'>403 – Bạn không có quyền truy cập trang này.</div>
+                            }
+                        />
+
+                        {/* Any authenticated user */}
+                        <Route element={<ProtectedRoute />}>
+                            <Route path='/pos' element={<POSPage />} />
+                        </Route>
+
+                        <Route path='*' element={<div className='p-8 text-center'>404 – Trang không tồn tại.</div>} />
+                    </Routes>
+                </BrowserRouter>
+            </AuthProvider>
         </QueryClientProvider>
     )
 }

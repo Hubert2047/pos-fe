@@ -24,3 +24,4 @@ export const DEFAULT_ORDER: Order = {
 }
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number]
 export const PAYMENT_METHODS = ['cash', 'uber', 'linepay', 'bank', 'foodpanda'] as const
+export const TOKEN_STORAGE_KEY = 'token'
