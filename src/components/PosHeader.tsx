@@ -1,7 +1,7 @@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group.tsx'
 import { Input } from '@/components/ui/input.tsx'
 import { Label } from '@/components/ui/label'
-import React from 'react'
+import React, {useState} from 'react'
 import { Button } from '@/components/ui/button.tsx'
 import { toast } from 'sonner'
 import { getPaymentMethodByType, getPriceByType } from '@/lib/utils.ts'
@@ -35,28 +35,11 @@ function PosHeader({
     closeDisplayOrderDetail,
     handlePendingOrder,
 }: Props) {
+    const [test,setTest] = useState("")
+    console.log(totalPrice)
     const handlePrint = () => {
-        const orderItemsText = currentOrder.items
-            .map((item) => {
-                const name = item.name || 'Sản phẩm'
-                const price = item.basePrice.toLocaleString()
-                return `${name.padEnd(18)} ${price.padStart(8)}đ`
-            })
-            .join('\n')
 
-        const invoiceContent = `
-      CỬA HÀNG CỦA TUẤN
-      Mã đơn: #00${currentOrderNumber}
-      Ngày: ${new Date().toLocaleString()}
-      --------------------------------
-      ${orderItemsText}
-      --------------------------------
-      TỔNG CỘNG: ${totalPrice.toLocaleString()}đ
-      
-      Cảm ơn quý khách!
-      (Hẹn gặp lại)
-      
-    `
+        const invoiceContent = test
         const iframe = document.createElement('iframe')
 
         Object.assign(iframe.style, {
@@ -156,13 +139,18 @@ function PosHeader({
                 <ToggleGroupItem value='uber'>Uber</ToggleGroupItem>
                 <ToggleGroupItem value='foodpanda'>FoodPanda</ToggleGroupItem>
             </ToggleGroup>
-
+            <div className='flex items-center space-x-2 '>
+                <Label htmlFor='stt' className='whitespace-nowrap'>
+                    test:
+                </Label>
+                <Input id='stt' className='flex-1' value={test} onChange={(e)=>{setTest(e.target.value)}} />
+            </div>
             <div className='flex-1'></div>
 
-            <div className='flex items-center space-x-2'>
-                <Label className='whitespace-nowrap'>Tổng tiền:</Label>
-                <Input className='w-30 font-bold text-red-600' value={totalPrice.toLocaleString()} disabled />
-            </div>
+            {/*<div className='flex items-center space-x-2'>*/}
+            {/*    <Label className='whitespace-nowrap'>Tổng tiền:</Label>*/}
+            {/*    <Input className='w-30 font-bold text-red-600' value={totalPrice.toLocaleString()} disabled />*/}
+            {/*</div>*/}
 
             {/* Nút In được đặt ở đây */}
             <Button variant='outline' className='border-blue-500 text-blue-500 hover:bg-blue-50' onClick={handlePrint}>
