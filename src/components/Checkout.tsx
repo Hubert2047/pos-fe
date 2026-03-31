@@ -92,6 +92,39 @@ function Checkout({
         if (currentOrder.type === 'foodpanda') return ['foodpanda']
         return []
     }, [currentOrder.type])
+    // const generateKitchenReceipt = () => {
+    //     const lines: string[] = []
+    //     const time = new Date().toLocaleTimeString('zh-TW', {
+    //         hour: '2-digit',
+    //         minute: '2-digit'
+    //     })
+    //     const typeLabel = {
+    //         takeaway: '外帶',
+    //         dine_in: '內用',
+    //         uber: 'Uber',
+    //         foodpanda: 'FoodPanda'
+    //     }[currentOrder.type] ?? ''
+    //
+    //     lines.push('================================')
+    //     lines.push(`  #${String(currentOrderNumber).padStart(3,'0')}    ${typeLabel}    ${time}`)
+    //     lines.push('================================')
+    //     lines.push('')
+    //
+    //     currentOrder.items.forEach((item, index) => {
+    //         const qty = `x${item.quantity}`.padStart(4, ' ')
+    //         lines.push(`${index + 1}. ${item.name.padEnd(20)}${qty}`)
+    //         if (item.note) {
+    //             lines.push(`   備註: ${item.note}`)
+    //         }
+    //         lines.push('')
+    //     })
+    //
+    //     lines.push('================================')
+    //     lines.push(`        共 ${currentOrder.items.length} 項`)
+    //     lines.push('================================')
+    //
+    //     return lines.join('\n')
+    // }
     return (
         <div className='border flex gap-2 flex-1 border-[#ccc] rounded p-2'>
             {isPendingOrder ? (

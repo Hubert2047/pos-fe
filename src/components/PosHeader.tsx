@@ -1,7 +1,7 @@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group.tsx'
 import { Input } from '@/components/ui/input.tsx'
 import { Label } from '@/components/ui/label'
-import React, {useState} from 'react'
+import React from 'react'
 import { Button } from '@/components/ui/button.tsx'
 import { toast } from 'sonner'
 import { getPaymentMethodByType, getPriceByType } from '@/lib/utils.ts'
@@ -9,6 +9,7 @@ import type { Item } from '@/api/item.ts'
 import type { BaseOrder } from '@/api/order'
 
 type Props = {
+
     items: Item[]
     isDetail: boolean
     isPendingOrder: boolean
@@ -35,11 +36,12 @@ function PosHeader({
     closeDisplayOrderDetail,
     handlePendingOrder,
 }: Props) {
-    const [test,setTest] = useState("")
-    console.log(totalPrice)
     const handlePrint = () => {
+        const invoiceContent = "Test"
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
 
-        const invoiceContent = test
         const iframe = document.createElement('iframe')
 
         Object.assign(iframe.style, {
@@ -55,8 +57,9 @@ function PosHeader({
         const htmlContent = `
       <html>
         <head>
+          <meta charset="UTF-8">
           <style>
-            @page { size: 80mm auto; margin: 0; }
+            @page { size: 80mm; margin: 0; }
             body { 
                 font-family: 'Courier New', Courier, monospace; 
                 width: 72mm; 
@@ -87,13 +90,16 @@ function PosHeader({
     `
 
         iframe.srcdoc = htmlContent
-
         document.body.appendChild(iframe)
 
-        const frameWindow = iframe.contentWindow
-        if (frameWindow) {
-            frameWindow.onafterprint = () => {
-                document.body.removeChild(iframe)
+        iframe.onload = () => {
+            const fw = iframe.contentWindow
+            if (fw) {
+                fw.focus()
+                fw.print()
+                fw.onafterprint = () => {
+                    document.body.removeChild(iframe)
+                }
             }
         }
     }
@@ -139,18 +145,13 @@ function PosHeader({
                 <ToggleGroupItem value='uber'>Uber</ToggleGroupItem>
                 <ToggleGroupItem value='foodpanda'>FoodPanda</ToggleGroupItem>
             </ToggleGroup>
-            <div className='flex items-center space-x-2 '>
-                <Label htmlFor='stt' className='whitespace-nowrap'>
-                    test:
-                </Label>
-                <Input id='stt' className='flex-1' value={test} onChange={(e)=>{setTest(e.target.value)}} />
-            </div>
+
             <div className='flex-1'></div>
 
-            {/*<div className='flex items-center space-x-2'>*/}
-            {/*    <Label className='whitespace-nowrap'>Tổng tiền:</Label>*/}
-            {/*    <Input className='w-30 font-bold text-red-600' value={totalPrice.toLocaleString()} disabled />*/}
-            {/*</div>*/}
+            <div className='flex items-center space-x-2'>
+                <Label className='whitespace-nowrap'>Tổng tiền:</Label>
+                <Input className='w-30 font-bold text-red-600' value={totalPrice.toLocaleString()} disabled />
+            </div>
 
             {/* Nút In được đặt ở đây */}
             <Button variant='outline' className='border-blue-500 text-blue-500 hover:bg-blue-50' onClick={handlePrint}>
