@@ -1,12 +1,12 @@
 import {ToggleGroup, ToggleGroupItem} from "@/components/ui/toggle-group.tsx";
 import {Input} from "@/components/ui/input.tsx";
 import {Label} from '@/components/ui/label'
-import type {ICreateOrder} from "@/api/order.ts";
 import React from "react";
 import {Button} from "@/components/ui/button.tsx";
 import {toast} from "sonner";
 import {getPaymentMethodByType, getPriceByType} from "@/lib/utils.ts";
 import type {Item} from "@/api/item.ts";
+import type { BaseOrder } from "@/api/order";
 
 type Props = {
     items: Item[];
@@ -14,9 +14,9 @@ type Props = {
     isPendingOrder: boolean,
     totalPrice: number
     currentOrderNumber: number
-    currentOrder: ICreateOrder
+    currentOrder: BaseOrder
     isCheckout: boolean
-    setCurrentOrder: React.Dispatch<React.SetStateAction<ICreateOrder>>
+    setCurrentOrder: React.Dispatch<React.SetStateAction<BaseOrder>>
     handleOpenCheckout(checkout: boolean): void
     closeDisplayOrderDetail(): void
     handlePendingOrder(open: boolean): void

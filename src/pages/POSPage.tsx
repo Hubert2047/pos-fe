@@ -1,7 +1,7 @@
 import React, {useMemo, useState} from 'react'
 import {Button} from '@/components/ui/button'
 import {getItems, type Item} from '@/api/item'
-import {getNextOrderNumber, type ICreateOrder, type OrderItem} from '@/api/order.ts'
+import {getNextOrderNumber,  type BaseOrder,  type OrderItem} from '@/api/order.ts'
 import ExpenseTableDialog from '@/components/expense/ExpenseTableDialog'
 import {useQuery} from '@tanstack/react-query'
 import PosOrderList from '@/components/orders/PosOrderList'
@@ -19,7 +19,7 @@ import ShiftAttendance from "@/components/ShiftAttendance.tsx";
 
 const POSPage: React.FC = () => {
     const [selectedCategory, setSelectedCategory] = useState<string>('牛肉河粉')
-    const [currentOrder, setCurrentOrder] = useState<ICreateOrder>(DEFAULT_ORDER)
+    const [currentOrder, setCurrentOrder] = useState<BaseOrder>(DEFAULT_ORDER)
     const [currentOrderItem, setCurrentOrderItem] = useState<OrderItem>(DEFAULT_ORDER_ITEM)
     const [selectedItem, setSelectedItem] = useState<Item | null>(null)
 
@@ -99,7 +99,7 @@ const POSPage: React.FC = () => {
         setIsPendingOrder(open)
     }
 
-    function displayOrderDetail(order: ICreateOrder) {
+    function displayOrderDetail(order: BaseOrder) {
         setCurrentOrder(order)
         setCurrentOrderItem(order.items[0])
         const item = items.find((item) => order.items[0].id === item._id)
@@ -117,7 +117,7 @@ const POSPage: React.FC = () => {
         setSelectedItem(null)
     }
 
-    function checkoutPendingOrder(order: ICreateOrder) {
+    function checkoutPendingOrder(order: BaseOrder) {
         setCurrentOrder(order)
         setSelectedItem(null)
         setOpenOrderTable(false)
