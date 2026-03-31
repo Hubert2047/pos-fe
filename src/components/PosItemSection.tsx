@@ -9,7 +9,7 @@ import NumPad from '@/components/NumPad.tsx'
 import React from 'react'
 import { updateOrderPayment, type BaseOrder, type OrderItem } from '@/api/order.ts'
 import { DEFAULT_ORDER_ITEM, PAYMENT_METHOD_ICONS, type PaymentMethod } from '@/constance'
-import { capitalize, getPriceByType } from '@/lib/utils.ts'
+import { capitalize, generateUUID, getPriceByType } from '@/lib/utils.ts'
 import { toast } from 'sonner'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import Loading from './Loading'
@@ -67,7 +67,7 @@ function PosItemSection({
         setCurrentOrderItem((prev) => ({
             ...prev,
             id: item._id,
-            itemId: crypto.randomUUID(),
+            itemId: generateUUID(),
             number: currentOrderNumber,
             name: item.name,
             variant,
