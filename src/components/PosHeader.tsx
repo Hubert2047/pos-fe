@@ -77,7 +77,7 @@ function PosHeader({
                 </Label>
                 <Input id='stt' className='w-30' value={totalPrice} disabled/>
             </div>
-            <div className="w-45">
+            <div className="w-48">
                 {(isDetail || isCheckout || isPendingOrder) ? (
                     <Button variant='default'
                             onClick={isDetail ? closeDisplayOrderDetail : isPendingOrder ? () => handlePendingOrder(false) : () => handleOpenCheckout(false)}>
