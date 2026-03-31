@@ -1,4 +1,4 @@
-import {useState, useEffect, type ReactNode } from 'react'
+import {useState, type ReactNode } from 'react'
 import { TOKEN_STORAGE_KEY } from '@/constance'
 import { AuthContext } from '@/hooks/auth'
 
