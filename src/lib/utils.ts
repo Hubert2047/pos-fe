@@ -98,10 +98,12 @@ export function generateUUID() {
 }
 const printQueue: { content: string; mode: 'customer' | 'kitchen' }[] = []
 let isPrinting = false
+
 export function printReceipt(content: string, mode: 'customer' | 'kitchen' = 'customer') {
     printQueue.push({ content, mode })
     processQueue()
 }
+
 export function processQueue() {
     if (isPrinting || printQueue.length === 0) return
     isPrinting = true
@@ -109,92 +111,112 @@ export function processQueue() {
     const isKitchen = mode === 'kitchen'
 
     const css = `
-    @page { 
-        size: 80mm auto; 
-        margin: 0;
-    }
-    * { box-sizing: border-box; }
-    html, body { 
-        margin: 0; 
-        padding: 0;
-        width: 80mm;        /* đổi từ 76mm → 80mm, dùng padding thay thế */
-    }
-    body {
-        font-family: 'Courier New', Courier, monospace;
-        font-size: ${isKitchen ? '15px' : '13px'};
-        font-weight: bold;
-        line-height: 1.4;
-        padding: 2mm;
-    }
-
-    .header {
-        display: flex;
-        justify-content: space-between;
-        padding: 2px 0;
-    }
-    .header.kitchen {
-        font-size: 17px;
-    }
-
-    /* Divider — dùng hr thay div cho chắc */
-    .divider {
-        border: none;
-        border-top: 2px dashed #000;
-        margin: 4px 0;
-        width: 100%;
-    }
-
-    .items {
-        width: 100%;
-        border-collapse: collapse;
-        table-layout: fixed;
-    }
-    .items tr { vertical-align: top; }
-    .items td { padding: 2px 0; word-break: break-word; }
-
-    .idx   { width: 18px; }
-    .price { width: 52px; text-align: right; white-space: nowrap; }
-    .name  { width: auto; }
-    .qty   { width: 36px; text-align: right; white-space: nowrap; }
-
-    .kitchen-item .name { font-size: 18px; }
-    .kitchen-item .qty  { font-size: 18px; }
-
-    .detail {
-        font-size: ${isKitchen ? '13px' : '12px'};
-        font-weight: normal;
-        margin-top: 1px;
-    }
-    .detail.sub { padding-left: 8px; }
-    .addon-price { float: right; font-weight: bold; }
-
-    .footer { text-align: center; padding: 4px 0; }
-`
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 80mm;
+            height: fit-content;
+            overflow: hidden;
+        }
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: ${isKitchen ? '15px' : '13px'};
+            font-weight: bold;
+            line-height: 1.4;
+            padding: 2mm;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+        }
+        .header.kitchen { font-size: 17px; }
+        .divider {
+            border: none;
+            border-top: 2px dashed #000;
+            margin: 4px 0;
+            width: 100%;
+        }
+        .items {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        .items tr { vertical-align: top; }
+        .items td { padding: 2px 0; word-break: break-word; }
+        .idx   { width: 18px; }
+        .price { width: 52px; text-align: right; white-space: nowrap; }
+        .name  { width: auto; }
+        .qty   { width: 36px; text-align: right; white-space: nowrap; }
+        .kitchen-item .name { font-size: 18px; }
+        .kitchen-item .qty  { font-size: 18px; }
+        .detail {
+            font-size: ${isKitchen ? '13px' : '12px'};
+            font-weight: normal;
+            margin-top: 1px;
+        }
+        .detail.sub { padding-left: 8px; }
+        .addon-price { float: right; font-weight: bold; }
+        .footer { text-align: center; padding: 4px 0; }
+    `
 
     const iframe = document.createElement('iframe')
     Object.assign(iframe.style, {
-        position: 'fixed', right: '0', bottom: '0',
-        width: '0', height: '0', border: '0', visibility: 'hidden',
+        position: 'fixed',
+        right: '0',
+        bottom: '0',
+        width: '0',
+        height: '0',
+        border: '0',
+        visibility: 'hidden',
     })
 
     iframe.srcdoc = `
         <html>
-        <head><meta charset="UTF-8"><style>${css}</style></head>
+        <head>
+            <meta charset="UTF-8">
+            <style>${css}</style>
+        </head>
         <body>${content}</body>
         </html>
     `
+
     document.body.appendChild(iframe)
+
     iframe.onload = () => {
         const fw = iframe.contentWindow
-        if (fw) {
+        const fd = iframe.contentDocument
+        if (!fw || !fd) {
+            document.body.removeChild(iframe)
+            isPrinting = false
+            processQueue()
+            return
+        }
+
+        // Đợi fonts/layout render xong rồi mới đo
+        setTimeout(() => {
+            const actualHeight = fd.body.scrollHeight
+
+            // Override @page với chiều cao thực của content
+            const pageStyle = fd.createElement('style')
+            pageStyle.textContent = `
+                @page {
+                    size: 80mm ${actualHeight}px;
+                    margin: 0;
+                }
+            `
+            fd.head.appendChild(pageStyle)
+
             fw.focus()
             fw.print()
+
             fw.onafterprint = () => {
                 document.body.removeChild(iframe)
                 isPrinting = false
                 processQueue()
             }
-        }
+        }, 150)
     }
 }
 // ─── Receipt cho khách (có giá) ───────────────────────────────

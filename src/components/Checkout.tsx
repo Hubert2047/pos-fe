@@ -171,7 +171,7 @@ function Checkout({
                         </div>
 
                         <div className='variant flex justify-start items-center gap-4 pt-4 pl-2'>
-                            <Label className='block w-[20] font-semibold'>Số tiền khách đưa:</Label>
+                            <Label className='block w-max font-semibold'>Số tiền khách đưa:</Label>
                             <Input
                                 id='amount'
                                 value={cash.toLocaleString()}
@@ -183,7 +183,7 @@ function Checkout({
                             />
                         </div>
                         <div className='variant flex justify-start items-center gap-4 pt-4 pl-2'>
-                            <Label className='block w-[20] font-semibold'>Số tiền trả lại khách:</Label>
+                            <Label className='block w-max font-semibold'>Số tiền trả lại khách:</Label>
                             <Input id='amount' value={cashBack} className='w-30' disabled />
                         </div>
                         {/* print option */}
