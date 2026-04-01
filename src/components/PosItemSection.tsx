@@ -145,11 +145,10 @@ function PosItemSection({
                                 className='h-12 w-full'
                                 variant='default'
                                 onClick={() => selectItem(item)}>
-                                    <div className='flex justify-center items-end flex-col ga-2'>
+                                    <div className='flex justify-center items-center flex-col ga-2'>
                                         <span>{item.name}</span>
-                                        <span>{item.price.toLocaleString()}</span>
+                                        <span>{getPriceByType(currentOrder.type,item.price)}</span>
                                     </div>
-                                {item.name}
                             </Button>
                         ))}
                     </div>
