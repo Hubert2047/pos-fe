@@ -1,28 +1,28 @@
-import React, {useMemo, useState} from 'react'
-import {Button} from '@/components/ui/button'
-import {getItems, type Item} from '@/api/item'
-import {getNextOrderNumber,  type BaseOrder,  type OrderItem} from '@/api/order.ts'
+import React, { useEffect, useMemo, useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { getItems, type Item } from '@/api/item'
+import { getNextOrderNumber, type BaseOrder, type OrderItem } from '@/api/order.ts'
 import ExpenseTableDialog from '@/components/expense/ExpenseTableDialog'
-import {useQuery} from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import PosOrderList from '@/components/orders/PosOrderList'
-import {DEFAULT_ORDER, DEFAULT_ORDER_ITEM} from "@/constance";
-import PosItemSection from "@/components/PosItemSection.tsx";
-import PosHeader from "@/components/PosHeader.tsx";
-import Loading from "@/components/Loading.tsx";
-import Checkout from "@/components/Checkout.tsx";
-import {type Discount, getDiscounts} from "@/api/discount.ts";
-import {OrderTable} from "@/components/orders/OrderTable.tsx";
-import {FloatingButton} from "@/components/FloatingButton.tsx";
-import DailyClosing from "@/components/daily-closing/DailyClosing.tsx";
-import OtherRevenue from "@/components/other-revenue/OtherRevenue.tsx";
-import ShiftAttendance from "@/components/ShiftAttendance.tsx";
+import { DEFAULT_ORDER, DEFAULT_ORDER_ITEM } from '@/constance'
+import PosItemSection from '@/components/PosItemSection.tsx'
+import PosHeader from '@/components/PosHeader.tsx'
+import Loading from '@/components/Loading.tsx'
+import Checkout from '@/components/Checkout.tsx'
+import { type Discount, getDiscounts } from '@/api/discount.ts'
+import { OrderTable } from '@/components/orders/OrderTable.tsx'
+import { FloatingButton } from '@/components/FloatingButton.tsx'
+import DailyClosing from '@/components/daily-closing/DailyClosing.tsx'
+import OtherRevenue from '@/components/other-revenue/OtherRevenue.tsx'
+import ShiftAttendance from '@/components/ShiftAttendance.tsx'
 
 const POSPage: React.FC = () => {
     const [selectedCategory, setSelectedCategory] = useState<string>('牛肉河粉')
     const [currentOrder, setCurrentOrder] = useState<BaseOrder>(DEFAULT_ORDER)
     const [currentOrderItem, setCurrentOrderItem] = useState<OrderItem>(DEFAULT_ORDER_ITEM)
     const [selectedItem, setSelectedItem] = useState<Item | null>(null)
-
+    const [isFullScreen, setIsFullScreen] = useState<boolean>(() => !!document.fullscreenElement)
     const [openOrderTable, setOpenOrderTable] = useState<boolean>(false)
     const [openExpense, setOpenExpense] = useState<boolean>(false)
     const [isEditItem, setIsEditItem] = useState<boolean>(false)
@@ -34,17 +34,17 @@ const POSPage: React.FC = () => {
     const [openDailyClosing, setOpenDailyClosing] = useState(false)
     const [openOtherRevenue, setOpenOtherRevenue] = useState(false)
     const [openShiftAttendance, setOpenShiftAttendance] = useState(false)
-    const {data: items = [], isLoading: isItemsLoading} = useQuery<Item[], Error>({
+    const { data: items = [], isLoading: isItemsLoading } = useQuery<Item[], Error>({
         queryKey: ['items'],
         queryFn: () => getItems(true),
         staleTime: 5 * 60 * 1000,
     })
-    const {data: discounts = []} = useQuery<Discount[], Error>({
+    const { data: discounts = [] } = useQuery<Discount[], Error>({
         queryKey: ['discounts'],
         queryFn: getDiscounts,
         staleTime: 5 * 60 * 1000,
     })
-    const {data: nextOrderNumber, isLoading: isOrderNumberLoading} = useQuery<number, Error>({
+    const { data: nextOrderNumber, isLoading: isOrderNumberLoading } = useQuery<number, Error>({
         queryKey: ['next-order-number'],
         queryFn: getNextOrderNumber,
         staleTime: Infinity,
@@ -59,6 +59,13 @@ const POSPage: React.FC = () => {
         return grouped
     }, [items])
 
+    useEffect(() => {
+        const onFSChange = () => {
+            setIsFullScreen(!!document.fullscreenElement)
+        }
+        document.addEventListener('fullscreenchange', onFSChange)
+        return () => document.removeEventListener('fullscreenchange', onFSChange)
+    }, [])
     const filteredItems = itemsByCategory[selectedCategory] ?? []
 
     const selectUpdateOrderItem = (orderItem: OrderItem) => {
@@ -74,10 +81,10 @@ const POSPage: React.FC = () => {
             const addon = i.addons.reduce((sum, a) => sum + a.amount * a.priceExtra, 0)
             return sum + item + addon
         }, 0)
-        if (!currentOrder.discount) return total;
-        if (currentOrder.discount.type === "percent") {
-            const percent = currentOrder.discount.amount / 100;
-            return total * (1 - percent);
+        if (!currentOrder.discount) return total
+        if (currentOrder.discount.type === 'percent') {
+            const percent = currentOrder.discount.amount / 100
+            return total * (1 - percent)
         }
         return total - currentOrder.discount.amount
     }, [currentOrder.discount, currentOrder.items])
@@ -93,7 +100,7 @@ const POSPage: React.FC = () => {
     }
 
     function handlePendingOrder(open: boolean) {
-        setCurrentOrder((prev) => ({...prev, customer: open ? {name: "", phone: ""} : null}))
+        setCurrentOrder((prev) => ({ ...prev, customer: open ? { name: '', phone: '' } : null }))
         setSelectedItem(null)
         setCurrentOrderItem(DEFAULT_ORDER_ITEM)
         setIsPendingOrder(open)
@@ -124,81 +131,128 @@ const POSPage: React.FC = () => {
         setIsCheckout(true)
         setIsCheckoutPendingOrder(true)
     }
-
-    if (isItemsLoading || isOrderNumberLoading)
-        return <Loading/>
+    async function toggleFullScreen() {
+        try {
+            if (!document.fullscreenElement) {
+                await document.documentElement.requestFullscreen()
+            } else {
+                await document.exitFullscreen()
+            }
+        } catch (err) {
+            console.error(err)
+        }
+    }
+    if (isItemsLoading || isOrderNumberLoading) return <Loading />
 
     return (
-        <div className='flex h-screen gap-2 p-2 overflow-hidden'>
-            <FloatingButton open={openBtns} setOpenBtns={setOpenBtns}/>
+        <div className={`flex h-screen gap-2 p-2 overflow-hidden ${isFullScreen ? 'fixed inset-0 z-50' : ''}`}>
+            <FloatingButton open={openBtns} setOpenBtns={setOpenBtns} />
             <div className='left flex flex-col flex-1 min-w-0 border border-[#ccc] rounded'>
-                <PosHeader items={items} isDetail={isDetail} isPendingOrder={isPendingOrder} currentOrder={currentOrder}
-                           setCurrentOrder={setCurrentOrder}
-                           handleOpenCheckout={handleOpenCheckout}
-                           handlePendingOrder={handlePendingOrder}
-                           isCheckout={isCheckout}
-                           currentOrderNumber={currentOrderNumber} totalPrice={totalPrice}
-                           closeDisplayOrderDetail={closeDisplayOrderDetail}/>
+                <PosHeader
+                    items={items}
+                    isDetail={isDetail}
+                    isPendingOrder={isPendingOrder}
+                    currentOrder={currentOrder}
+                    setCurrentOrder={setCurrentOrder}
+                    handleOpenCheckout={handleOpenCheckout}
+                    handlePendingOrder={handlePendingOrder}
+                    isCheckout={isCheckout}
+                    currentOrderNumber={currentOrderNumber}
+                    totalPrice={totalPrice}
+                    closeDisplayOrderDetail={closeDisplayOrderDetail}
+                />
                 <div className='flex gap-2 p-2 h-full min-h-0'>
                     <div className='ordered-items rounded p-4 border flex-1 max-w-80 border-[#ccc]'>
-                        <PosOrderList items={currentOrder.items}
-                                      updateItem={selectUpdateOrderItem}
-                                      currentOrderItem={currentOrderItem}/>
+                        <PosOrderList
+                            items={currentOrder.items}
+                            updateItem={selectUpdateOrderItem}
+                            currentOrderItem={currentOrderItem}
+                        />
                     </div>
-                    {(isCheckout || isPendingOrder) ? <Checkout totalPrice={totalPrice} isPendingOrder={isPendingOrder}
-                                                                currentOrderNumber={currentOrderNumber}
-                                                                setCurrentOrder={setCurrentOrder}
-                                                                currentOrder={currentOrder}
-                                                                isCheckoutPendingOrder={isCheckoutPendingOrder}
-                                                                setIsCheckoutPendingOrder={setIsCheckoutPendingOrder}
-                                                                discounts={discounts}
-                                                                handlePendingOrder={handlePendingOrder}
-                                                                handleOpenCheckout={handleOpenCheckout}
-                                                                setCurrentOrderNumber={setCurrentOrderNumber}/> :
-                        <PosItemSection isDetail={isDetail} currentOrderNumber={currentOrderNumber}
-                                        itemsByCategory={itemsByCategory}
-                                        currentOrder={currentOrder}
-                                        selectedCategory={selectedCategory}
-                                        selectedItem={selectedItem} filteredItems={filteredItems}
-                                        currentOrderItem={currentOrderItem}
-                                        isEditItem={isEditItem}
-                                        setCurrentOrderItem={setCurrentOrderItem} setCurrentOrder={setCurrentOrder}
-                                        setSelectedCategory={setSelectedCategory} setSelectedItem={setSelectedItem}
-                                        setIsEditItem={setIsEditItem}/>}
-
+                    {isCheckout || isPendingOrder ? (
+                        <Checkout
+                            totalPrice={totalPrice}
+                            isPendingOrder={isPendingOrder}
+                            currentOrderNumber={currentOrderNumber}
+                            setCurrentOrder={setCurrentOrder}
+                            currentOrder={currentOrder}
+                            isCheckoutPendingOrder={isCheckoutPendingOrder}
+                            setIsCheckoutPendingOrder={setIsCheckoutPendingOrder}
+                            discounts={discounts}
+                            handlePendingOrder={handlePendingOrder}
+                            handleOpenCheckout={handleOpenCheckout}
+                            setCurrentOrderNumber={setCurrentOrderNumber}
+                        />
+                    ) : (
+                        <PosItemSection
+                            isDetail={isDetail}
+                            currentOrderNumber={currentOrderNumber}
+                            itemsByCategory={itemsByCategory}
+                            currentOrder={currentOrder}
+                            selectedCategory={selectedCategory}
+                            selectedItem={selectedItem}
+                            filteredItems={filteredItems}
+                            currentOrderItem={currentOrderItem}
+                            isEditItem={isEditItem}
+                            setCurrentOrderItem={setCurrentOrderItem}
+                            setCurrentOrder={setCurrentOrder}
+                            setSelectedCategory={setSelectedCategory}
+                            setSelectedItem={setSelectedItem}
+                            setIsEditItem={setIsEditItem}
+                        />
+                    )}
                 </div>
             </div>
-            {openBtns && <div className='right flex flex-col justify-end p-2 gap-2 border border-[#ccc] rounded'>
-                <Button variant='outline' onClick={() => setOpenOrderTable(true)}>
-                    Bảng đơn hàng
-                </Button>
-                <Button variant='outline' onClick={() => setOpenOtherRevenue(true)}>
-                    Thu nhập khác
-                </Button>
-                <Button variant='outline' onClick={() => setOpenExpense(true)}>
-                    Bảng chi phí
-                </Button>
-                <Button variant='outline' onClick={() => setOpenShiftAttendance(true)}>
-                    Chấm công
-                </Button>
-                <Button variant='outline' onClick={() => setOpenDailyClosing(true)}>
-                    Kết sổ
-                </Button>
-            </div>}
-            {openExpense && <ExpenseTableDialog
-                open={openExpense}
-                onClose={() => {
-                    setOpenExpense(false)
-                }}
-            />}
-            {openOrderTable &&
-                <OrderTable open={openOrderTable} displayOrderDetail={displayOrderDetail}
-                            checkoutPendingOrder={checkoutPendingOrder} onClose={() => {
-                    setOpenOrderTable(false)
-                }}/>}
-            {openDailyClosing && <DailyClosing open={openDailyClosing} onClose={() => setOpenDailyClosing(false)}/>}
-            {openOtherRevenue && <OtherRevenue open={openOtherRevenue} onClose={() => setOpenOtherRevenue(false)}/>}
-            {openShiftAttendance && <ShiftAttendance open={openShiftAttendance} onClose={() => {setOpenShiftAttendance(false)}} />}
+            {openBtns && (
+                <div className='right flex flex-col justify-end p-2 gap-2 border border-[#ccc] rounded'>
+                    <Button variant='outline' onClick={toggleFullScreen}>
+                        {isFullScreen ? 'Tắt toàn màn hình' : 'Mở toàn màn hình'}
+                    </Button>
+                    <Button variant='outline' onClick={() => setOpenOrderTable(true)}>
+                        Bảng đơn hàng
+                    </Button>
+                    <Button variant='outline' onClick={() => setOpenOtherRevenue(true)}>
+                        Thu nhập khác
+                    </Button>
+                    <Button variant='outline' onClick={() => setOpenExpense(true)}>
+                        Bảng chi phí
+                    </Button>
+                    <Button variant='outline' onClick={() => setOpenShiftAttendance(true)}>
+                        Chấm công
+                    </Button>
+                    <Button variant='outline' onClick={() => setOpenDailyClosing(true)}>
+                        Kết sổ
+                    </Button>
+                </div>
+            )}
+            {openExpense && (
+                <ExpenseTableDialog
+                    open={openExpense}
+                    onClose={() => {
+                        setOpenExpense(false)
+                    }}
+                />
+            )}
+            {openOrderTable && (
+                <OrderTable
+                    open={openOrderTable}
+                    displayOrderDetail={displayOrderDetail}
+                    checkoutPendingOrder={checkoutPendingOrder}
+                    onClose={() => {
+                        setOpenOrderTable(false)
+                    }}
+                />
+            )}
+            {openDailyClosing && <DailyClosing open={openDailyClosing} onClose={() => setOpenDailyClosing(false)} />}
+            {openOtherRevenue && <OtherRevenue open={openOtherRevenue} onClose={() => setOpenOtherRevenue(false)} />}
+            {openShiftAttendance && (
+                <ShiftAttendance
+                    open={openShiftAttendance}
+                    onClose={() => {
+                        setOpenShiftAttendance(false)
+                    }}
+                />
+            )}
         </div>
     )
 }

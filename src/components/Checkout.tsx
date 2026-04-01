@@ -1,8 +1,8 @@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group.tsx'
 import { DEFAULT_ORDER, PAYMENT_METHOD_ICONS, type PaymentMethod } from '@/constance'
-import {type BaseOrder, createOrder} from '@/api/order.ts'
-import React, {  useMemo, useState } from 'react'
-import { capitalize } from '@/lib/utils.ts'
+import { type BaseOrder, createOrder } from '@/api/order.ts'
+import React, { useMemo, useState } from 'react'
+import { capitalize, generateKitchenReceipt, generateReceipt, printReceipt } from '@/lib/utils.ts'
 import type { Discount } from '@/api/discount.ts'
 import { Label } from '@/components/ui/label.tsx'
 import { Input } from '@/components/ui/input.tsx'
@@ -12,6 +12,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import Loading from '@/components/Loading.tsx'
 import PendingOrder from '@/components/PendingOrder.tsx'
+import { Checkbox } from '@/components/ui/checkbox'
 
 type Props = {
     isPendingOrder: boolean
@@ -40,21 +41,24 @@ function Checkout({
     handlePendingOrder,
     setIsCheckoutPendingOrder,
 }: Props) {
+    const [isPrint, setIsPrint] = useState(!isCheckoutPendingOrder)
     const queryClient = useQueryClient()
     const [cash, setCash] = useState<number>(totalPrice)
     const createOrderMutation = useMutation({
         mutationFn: createOrder,
         onSuccess: () => {
-              queryClient.invalidateQueries({
-                  predicate: (query) => query.queryKey[0] === 'sale-by-payment' || query.queryKey[0] === 'orders',
-              }).then()
+            queryClient
+                .invalidateQueries({
+                    predicate: (query) => query.queryKey[0] === 'sale-by-payment' || query.queryKey[0] === 'orders',
+                })
+                .then()
         },
         onError: () => {
             toast.error('Tạo đơn không thành công')
         },
     })
     const handleCreateOrder = async (status: 'paid' | 'pending') => {
-        if(cash<totalPrice) {
+        if (cash < totalPrice) {
             toast.error('Tiền khách đưa chưa đủ')
             return
         }
@@ -65,6 +69,10 @@ function Checkout({
             checkoutPending: isCheckoutPendingOrder,
         }
         const nextOrder = await createOrderMutation.mutateAsync(newOrder)
+        printReceipt(generateReceipt(newOrder))
+        newOrder.items.forEach((item, index) => {
+            printReceipt(generateKitchenReceipt(newOrder, item, index))
+        })
         handleOpenCheckout(false)
         handlePendingOrder(false)
         setCurrentOrder(DEFAULT_ORDER)
@@ -92,43 +100,13 @@ function Checkout({
         if (currentOrder.type === 'foodpanda') return ['foodpanda']
         return []
     }, [currentOrder.type])
-    // const generateKitchenReceipt = () => {
-    //     const lines: string[] = []
-    //     const time = new Date().toLocaleTimeString('zh-TW', {
-    //         hour: '2-digit',
-    //         minute: '2-digit'
-    //     })
-    //     const typeLabel = {
-    //         takeaway: '外帶',
-    //         dine_in: '內用',
-    //         uber: 'Uber',
-    //         foodpanda: 'FoodPanda'
-    //     }[currentOrder.type] ?? ''
-    //
-    //     lines.push('================================')
-    //     lines.push(`  #${String(currentOrderNumber).padStart(3,'0')}    ${typeLabel}    ${time}`)
-    //     lines.push('================================')
-    //     lines.push('')
-    //
-    //     currentOrder.items.forEach((item, index) => {
-    //         const qty = `x${item.quantity}`.padStart(4, ' ')
-    //         lines.push(`${index + 1}. ${item.name.padEnd(20)}${qty}`)
-    //         if (item.note) {
-    //             lines.push(`   備註: ${item.note}`)
-    //         }
-    //         lines.push('')
-    //     })
-    //
-    //     lines.push('================================')
-    //     lines.push(`        共 ${currentOrder.items.length} 項`)
-    //     lines.push('================================')
-    //
-    //     return lines.join('\n')
-    // }
+
     return (
         <div className='border flex gap-2 flex-1 border-[#ccc] rounded p-2'>
             {isPendingOrder ? (
                 <PendingOrder
+                    isPrint={isPrint}
+                    setIsPrint={setIsPrint}
                     currentOrder={currentOrder}
                     setCurrentOrder={setCurrentOrder}
                     handleCreateOrder={handleCreateOrder}
@@ -191,6 +169,7 @@ function Checkout({
                                 ))}
                             </ToggleGroup>
                         </div>
+
                         <div className='variant flex justify-start items-center gap-4 pt-4 pl-2'>
                             <Label className='block w-[20] font-semibold'>Số tiền khách đưa:</Label>
                             <Input
@@ -206,6 +185,15 @@ function Checkout({
                         <div className='variant flex justify-start items-center gap-4 pt-4 pl-2'>
                             <Label className='block w-[20] font-semibold'>Số tiền trả lại khách:</Label>
                             <Input id='amount' value={cashBack} className='w-30' disabled />
+                        </div>
+                        {/* print option */}
+                        <div className='flex justify-start items-center gap-4 pt-5 pl-2'>
+                            <Checkbox
+                                id='print-confirm'
+                                checked={isPrint}
+                                onCheckedChange={(checked) => setIsPrint(!!checked)}
+                            />
+                            <Label htmlFor='print-confirm'>In khi xác nhận</Label>
                         </div>
                         <div className='flex justify-start pt-8 gap-3'>
                             <NumPad

@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import type { PaymentMethod } from '@/constance'
+import type { BaseOrder, OrderItem } from '@/api/order'
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
@@ -95,8 +96,7 @@ export function generateUUID() {
         })
     }
 }
-export function Print(content: string) {
-    const invoiceContent = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+export function printReceipt(content: string) {
     const iframe = document.createElement('iframe')
     Object.assign(iframe.style, {
         position: 'fixed',
@@ -109,38 +109,32 @@ export function Print(content: string) {
     })
 
     const htmlContent = `
-      <html>
-        <head>
-          <meta charset="UTF-8">
-          <style>
-            @page { size: 80mm; margin: 0; }
-            body { 
-                font-family: 'Courier New', Courier, monospace; 
-                width: 72mm; 
-                margin: 0; 
-                padding: 10px 2mm;
-                background: white;
-            }
-            pre { 
-                white-space: pre-wrap; 
-                word-wrap: break-word;
-                font-size: 13px; 
-                line-height: 1.5;
-                font-weight: bold;
-                margin: 0;
-            }
-          </style>
-        </head>
-        <body>
-          <pre>${invoiceContent}</pre>
-          <script>
-            window.onload = function() {
-                window.focus();
-                window.print();
-            };
-          </script>
-        </body>
-      </html>
+            <html>
+                <head>
+                <meta charset="UTF-8">
+                <style>
+                    @page { size: 80mm auto; margin: 0; }
+                    html, body { margin: 0; padding: 0; }
+                    body { 
+                        font-family: 'Courier New', Courier, monospace; 
+                        width: 76mm;
+                        padding: 2mm;
+                    }
+                    pre { 
+                        white-space: pre-wrap; 
+                        word-wrap: break-word;
+                        font-size: 13px; 
+                        line-height: 1.4;
+                        font-weight: bold;
+                        margin: 0;
+                        padding: 0;
+                    }
+                </style>
+                </head>
+                <body>
+                <pre>${content}</pre>
+                </body>
+            </html>
     `
     iframe.srcdoc = htmlContent
     document.body.appendChild(iframe)
@@ -153,5 +147,76 @@ export function Print(content: string) {
                 document.body.removeChild(iframe)
             }
         }
+    }
+}
+export function generateKitchenReceipt(order: BaseOrder, item: OrderItem, index: number) {
+    const lines: string[] = []
+    lines.push('================================')
+    lines.push(generateReceiptHeader(order))
+    lines.push('================================')
+    lines.push('')
+    const qty = `x${item.quantity}`.padStart(4, ' ')
+    lines.push(`${item.name.padEnd(20)}${qty}`)
+    appendItemDetails(lines, item, false)
+    lines.push('')
+    lines.push(`        共 ${index + 1}/${order.items.length} 項`)
+    lines.push('================================')
+    return lines.join('\n')
+}
+export function generateReceipt(order: BaseOrder) {
+    const lines: string[] = []
+    lines.push('================================')
+    lines.push(generateReceiptHeader(order))
+    lines.push('================================')
+    lines.push('')
+
+    order.items.forEach((item, index) => {
+        const qty = `x${item.quantity}`.padStart(4, ' ')
+        const price = item.quantity * item.basePrice
+        lines.push(`${index + 1}. ${item.name.padEnd(16)}  ${qty}  ${price.toLocaleString()}`)
+        appendItemDetails(lines, item, true)
+        lines.push('')
+    })
+    lines.push('================================')
+    lines.push(`        共 ${order.items.length} 項`)
+    lines.push('================================')
+
+    return lines.join('\n')
+}
+function generateReceiptHeader(order: BaseOrder) {
+    const time = new Date().toLocaleTimeString('zh-TW', {
+        hour: '2-digit',
+        minute: '2-digit',
+    })
+    const typeLabel =
+        {
+            takeaway: '外帶',
+            dine_in: '內用',
+            uber: 'Uber',
+            foodpanda: 'FoodPanda',
+        }[order.type] ?? ''
+
+    return `  #${String(order.number).padStart(3, '0')}    ${typeLabel}    ${time}`
+}
+function appendItemDetails(lines: string[], item: OrderItem, hasPrintPrice = true) {
+    if (item.variant !== '') {
+        lines.push(`   特選: ${item.variant}`)
+    }
+    if (item.addons.length > 0) {
+        lines.push('   加料:')
+        item.addons.forEach((addon) => {
+            const addonPrice = addon.priceExtra * addon.amount
+            if (hasPrintPrice) lines.push(`   - ${addon.name} x${addon.amount}  ${addonPrice.toLocaleString()}`)
+            else lines.push(`   - ${addon.name} x${addon.amount}`)
+        })
+    }
+    if (item.noteOptions.length > 0) {
+        lines.push('   不加:')
+        item.noteOptions.forEach((option) => {
+            lines.push(`   - ${option}`)
+        })
+    }
+    if (item.note) {
+        lines.push(`   備註: ${item.note}`)
     }
 }

@@ -264,6 +264,7 @@ function PosItemSection({
                                 </div>
                             </>
                         )}
+                        {/* edit paymentmedthod */}
                         {isDetail &&
                             ['dine_in', 'takeaway'].includes(currentOrder.type) &&
                             ['cash', 'linepay', 'bank'].includes(currentOrder.paymentMethod) && (
