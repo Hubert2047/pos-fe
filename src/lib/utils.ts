@@ -96,47 +96,93 @@ export function generateUUID() {
         })
     }
 }
-export function printReceipt(content: string) {
+const printQueue: { content: string; mode: 'customer' | 'kitchen' }[] = []
+let isPrinting = false
+export function printReceipt(content: string, mode: 'customer' | 'kitchen' = 'customer') {
+    printQueue.push({ content, mode })
+    processQueue()
+}
+export function processQueue() {
+    if (isPrinting || printQueue.length === 0) return
+    isPrinting = true
+    const { content, mode } = printQueue.shift()!
+    const isKitchen = mode === 'kitchen'
+
+    const css = `
+        @page { size: 80mm auto; margin: 0; }
+        html, body { margin: 0; padding: 0; }
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: ${isKitchen ? '15px' : '13px'};
+            font-weight: bold;
+            line-height: 1.4;
+            width: 76mm;
+            padding: 2mm;
+            box-sizing: border-box;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+        }
+        .header.kitchen {
+            font-size: 17px;   /* số order to hơn cho bếp dễ thấy */
+        }
+
+        /* Divider */
+        .divider {
+            border-top: 2px dashed #000;
+            margin: 4px 0;
+        }
+
+        /* Items table */
+        .items {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        .items tr { vertical-align: top; }
+        .items td { padding: 2px 0; word-break: break-word; }
+
+        /* Customer receipt columns */
+        .idx   { width: 18px; }
+        .price { width: 52px; text-align: right; white-space: nowrap; }
+
+        /* Shared columns */
+        .name  { width: auto; }
+        .qty   { width: 36px; text-align: right; white-space: nowrap; }
+
+        /* Kitchen: tên món to hơn */
+        .kitchen-item .name { font-size: 18px; }
+        .kitchen-item .qty  { font-size: 18px; }
+
+        /* Item details */
+        .detail {
+            font-size: ${isKitchen ? '13px' : '12px'};
+            font-weight: normal;
+            margin-top: 1px;
+        }
+        .detail.sub { padding-left: 8px; }
+        .addon-price { float: right; font-weight: bold; }
+
+        /* Footer */
+        .footer { text-align: center; padding: 4px 0; }
+    `
+
     const iframe = document.createElement('iframe')
     Object.assign(iframe.style, {
-        position: 'fixed',
-        right: '0',
-        bottom: '0',
-        width: '0',
-        height: '0',
-        border: '0',
-        visibility: 'hidden',
+        position: 'fixed', right: '0', bottom: '0',
+        width: '0', height: '0', border: '0', visibility: 'hidden',
     })
 
-    const htmlContent = `
-            <html>
-                <head>
-                <meta charset="UTF-8">
-                <style>
-                    @page { size: 80mm auto; margin: 0; }
-                    html, body { margin: 0; padding: 0; }
-                    body { 
-                        font-family: 'Courier New', Courier, monospace; 
-                        width: 76mm;
-                        padding: 2mm;
-                    }
-                    pre { 
-                        white-space: pre-wrap; 
-                        word-wrap: break-word;
-                        font-size: 13px; 
-                        line-height: 1.4;
-                        font-weight: bold;
-                        margin: 0;
-                        padding: 0;
-                    }
-                </style>
-                </head>
-                <body>
-                <pre>${content}</pre>
-                </body>
-            </html>
+    iframe.srcdoc = `
+        <html>
+        <head><meta charset="UTF-8"><style>${css}</style></head>
+        <body>${content}</body>
+        </html>
     `
-    iframe.srcdoc = htmlContent
     document.body.appendChild(iframe)
     iframe.onload = () => {
         const fw = iframe.contentWindow
@@ -145,78 +191,83 @@ export function printReceipt(content: string) {
             fw.print()
             fw.onafterprint = () => {
                 document.body.removeChild(iframe)
+                isPrinting = false
+                processQueue()
             }
         }
     }
 }
-export function generateKitchenReceipt(order: BaseOrder, item: OrderItem, index: number) {
-    const lines: string[] = []
-    lines.push('================================')
-    lines.push(generateReceiptHeader(order))
-    lines.push('================================')
-    lines.push('')
-    const qty = `x${item.quantity}`.padStart(4, ' ')
-    lines.push(`${item.name.padEnd(20)}${qty}`)
-    appendItemDetails(lines, item, false)
-    lines.push('')
-    lines.push(`        共 ${index + 1}/${order.items.length} 項`)
-    lines.push('================================')
-    return lines.join('\n')
-}
-export function generateReceipt(order: BaseOrder) {
-    const lines: string[] = []
-    lines.push('================================')
-    lines.push(generateReceiptHeader(order))
-    lines.push('================================')
-    lines.push('')
-
-    order.items.forEach((item, index) => {
-        const qty = `x${item.quantity}`.padStart(4, ' ')
+// ─── Receipt cho khách (có giá) ───────────────────────────────
+export function generateReceiptHTML(order: BaseOrder): string {
+    const itemRows = order.items.map((item, index) => {
         const price = item.quantity * item.basePrice
-        lines.push(`${index + 1}. ${item.name.padEnd(16)}  ${qty}  ${price.toLocaleString()}`)
-        appendItemDetails(lines, item, true)
-        lines.push('')
-    })
-    lines.push('================================')
-    lines.push(`        共 ${order.items.length} 項`)
-    lines.push('================================')
+        return `
+            <tr>
+                <td class="idx">${index + 1}.</td>
+                <td class="name">${item.name}${buildItemDetailsHTML(item, true)}</td>
+                <td class="qty">x${item.quantity}</td>
+                <td class="price">${price.toLocaleString()}</td>
+            </tr>`
+    }).join('')
 
-    return lines.join('\n')
+    return `
+        <div class="header">${buildHeaderHTML(order)}</div>
+        <div class="divider"></div>
+        <table class="items">${itemRows}</table>
+        <div class="divider"></div>
+        <div class="footer">共 ${order.items.length} 項</div>
+    `
 }
-function generateReceiptHeader(order: BaseOrder) {
-    const time = new Date().toLocaleTimeString('zh-TW', {
-        hour: '2-digit',
-        minute: '2-digit',
-    })
-    const typeLabel =
-        {
-            takeaway: '外帶',
-            dine_in: '內用',
-            uber: 'Uber',
-            foodpanda: 'FoodPanda',
-        }[order.type] ?? ''
 
-    return `  #${String(order.number).padStart(3, '0')}    ${typeLabel}    ${time}`
+// ─── Receipt cho bếp (không giá, 1 món, to hơn) ───────────────
+export function generateKitchenReceiptHTML(order: BaseOrder, item: OrderItem, index: number): string {
+    return `
+        <div class="header kitchen">${buildHeaderHTML(order)}</div>
+        <div class="divider"></div>
+        <table class="items kitchen-item">
+            <tr>
+                <td class="name">${item.name}${buildItemDetailsHTML(item, false)}</td>
+                <td class="qty">x${item.quantity}</td>
+            </tr>
+        </table>
+        <div class="divider"></div>
+        <div class="footer">共 ${index + 1} / ${order.items.length} 項</div>
+    `
 }
-function appendItemDetails(lines: string[], item: OrderItem, hasPrintPrice = true) {
-    if (item.variant !== '') {
-        lines.push(`   特選: ${item.variant}`)
+
+// ─── Shared helpers ────────────────────────────────────────────
+function buildHeaderHTML(order: BaseOrder): string {
+    const time = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })
+    const typeLabel = ({ takeaway: '外帶', dine_in: '內用', uber: 'Uber', foodpanda: 'FoodPanda' } as Record<string, string>)[order.type] ?? ''
+    return `
+        <span>#${String(order.number).padStart(3, '0')}</span>
+        <span>${typeLabel}</span>
+        <span>${time}</span>
+    `
+}
+
+function buildItemDetailsHTML(item: OrderItem, showPrice: boolean): string {
+    const parts: string[] = []
+
+    if (item.variant) {
+        parts.push(`<div class="detail">特選: ${item.variant}</div>`)
     }
     if (item.addons.length > 0) {
-        lines.push('   加料:')
-        item.addons.forEach((addon) => {
-            const addonPrice = addon.priceExtra * addon.amount
-            if (hasPrintPrice) lines.push(`   - ${addon.name} x${addon.amount}  ${addonPrice.toLocaleString()}`)
-            else lines.push(`   - ${addon.name} x${addon.amount}`)
+        parts.push(`<div class="detail">加料:</div>`)
+        item.addons.forEach(addon => {
+            const priceStr = showPrice
+                ? `<span class="addon-price">${(addon.priceExtra * addon.amount).toLocaleString()}</span>`
+                : ''
+            parts.push(`<div class="detail sub">- ${addon.name} x${addon.amount}${priceStr}</div>`)
         })
     }
     if (item.noteOptions.length > 0) {
-        lines.push('   不加:')
-        item.noteOptions.forEach((option) => {
-            lines.push(`   - ${option}`)
-        })
+        parts.push(`<div class="detail">不加:</div>`)
+        item.noteOptions.forEach(opt => parts.push(`<div class="detail sub">- ${opt}</div>`))
     }
     if (item.note) {
-        lines.push(`   備註: ${item.note}`)
+        parts.push(`<div class="detail">備註: ${item.note}</div>`)
     }
+
+    return parts.join('')
 }

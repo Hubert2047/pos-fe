@@ -1,26 +1,29 @@
-import type { BaseOrder } from '@/api/order'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Checkbox } from './ui/checkbox'
-import { useState } from 'react'
-import { Label } from './ui/label'
-import { Button } from './ui/button'
-import { generateKitchenReceipt, generateReceipt, printReceipt } from '@/lib/utils'
+import type {BaseOrder} from '@/api/order'
+import {Dialog, DialogContent, DialogHeader, DialogTitle} from '@/components/ui/dialog'
+import {Checkbox} from './ui/checkbox'
+import {useState} from 'react'
+import {Label} from './ui/label'
+import {Button} from './ui/button'
+import {generateKitchenReceiptHTML, generateReceiptHTML, printReceipt} from '@/lib/utils'
+
 type Props = {
     order: BaseOrder
     open: boolean
     onClose: () => void
 }
-export default function PrintOptions({ order, open, onClose }: Props) {
+export default function PrintOptions({order, open, onClose}: Props) {
     const [isPrintReceipt, setIsPrintReceipt] = useState(true)
     const [isPrintKitchenReceipt, setIsPrintKitchenReceipt] = useState(true)
+
     function handlePrint() {
-        if (isPrintReceipt) printReceipt(generateReceipt(order))
+        if (isPrintReceipt) printReceipt(generateReceiptHTML(order), "customer")
         if (isPrintKitchenReceipt) {
             order.items.forEach((item, index) => {
-                printReceipt(generateKitchenReceipt(order, item, index))
+                printReceipt(generateKitchenReceiptHTML(order, item, index), "kitchen")
             })
         }
     }
+
     return (
         <Dialog
             open={open}
