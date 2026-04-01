@@ -109,67 +109,67 @@ export function processQueue() {
     const isKitchen = mode === 'kitchen'
 
     const css = `
-        @page { size: 80mm auto; margin: 0; }
-        html, body { margin: 0; padding: 0; }
-        body {
-            font-family: 'Courier New', Courier, monospace;
-            font-size: ${isKitchen ? '15px' : '13px'};
-            font-weight: bold;
-            line-height: 1.4;
-            width: 76mm;
-            padding: 2mm;
-            box-sizing: border-box;
-        }
+    @page { 
+        size: 80mm auto; 
+        margin: 0;
+    }
+    * { box-sizing: border-box; }
+    html, body { 
+        margin: 0; 
+        padding: 0;
+        width: 80mm;        /* đổi từ 76mm → 80mm, dùng padding thay thế */
+    }
+    body {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: ${isKitchen ? '15px' : '13px'};
+        font-weight: bold;
+        line-height: 1.4;
+        padding: 2mm;
+    }
 
-        /* Header */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            padding: 2px 0;
-        }
-        .header.kitchen {
-            font-size: 17px;   /* số order to hơn cho bếp dễ thấy */
-        }
+    .header {
+        display: flex;
+        justify-content: space-between;
+        padding: 2px 0;
+    }
+    .header.kitchen {
+        font-size: 17px;
+    }
 
-        /* Divider */
-        .divider {
-            border-top: 2px dashed #000;
-            margin: 4px 0;
-        }
+    /* Divider — dùng hr thay div cho chắc */
+    .divider {
+        border: none;
+        border-top: 2px dashed #000;
+        margin: 4px 0;
+        width: 100%;
+    }
 
-        /* Items table */
-        .items {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
-        .items tr { vertical-align: top; }
-        .items td { padding: 2px 0; word-break: break-word; }
+    .items {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+    .items tr { vertical-align: top; }
+    .items td { padding: 2px 0; word-break: break-word; }
 
-        /* Customer receipt columns */
-        .idx   { width: 18px; }
-        .price { width: 52px; text-align: right; white-space: nowrap; }
+    .idx   { width: 18px; }
+    .price { width: 52px; text-align: right; white-space: nowrap; }
+    .name  { width: auto; }
+    .qty   { width: 36px; text-align: right; white-space: nowrap; }
 
-        /* Shared columns */
-        .name  { width: auto; }
-        .qty   { width: 36px; text-align: right; white-space: nowrap; }
+    .kitchen-item .name { font-size: 18px; }
+    .kitchen-item .qty  { font-size: 18px; }
 
-        /* Kitchen: tên món to hơn */
-        .kitchen-item .name { font-size: 18px; }
-        .kitchen-item .qty  { font-size: 18px; }
+    .detail {
+        font-size: ${isKitchen ? '13px' : '12px'};
+        font-weight: normal;
+        margin-top: 1px;
+    }
+    .detail.sub { padding-left: 8px; }
+    .addon-price { float: right; font-weight: bold; }
 
-        /* Item details */
-        .detail {
-            font-size: ${isKitchen ? '13px' : '12px'};
-            font-weight: normal;
-            margin-top: 1px;
-        }
-        .detail.sub { padding-left: 8px; }
-        .addon-price { float: right; font-weight: bold; }
-
-        /* Footer */
-        .footer { text-align: center; padding: 4px 0; }
-    `
+    .footer { text-align: center; padding: 4px 0; }
+`
 
     const iframe = document.createElement('iframe')
     Object.assign(iframe.style, {
@@ -212,9 +212,9 @@ export function generateReceiptHTML(order: BaseOrder): string {
 
     return `
         <div class="header">${buildHeaderHTML(order)}</div>
-        <div class="divider"></div>
+        <hr class="divider"></div>
         <table class="items">${itemRows}</table>
-        <div class="divider"></div>
+        <hr class="divider"></div>
         <div class="footer">共 ${order.items.length} 項</div>
     `
 }
