@@ -125,6 +125,7 @@ function PosItemSection({
                         return (
                             <Button
                                 key={categoryName}
+                                className='h-10'
                                 variant={categoryName === selectedCategory ? 'default' : 'outline'}
                                 onClick={() => {
                                     if (selectedItem) return
@@ -137,13 +138,17 @@ function PosItemSection({
             </div>
             <div className='select-items flex w-50 flex-wrap items-start justify-start rounded border border-[#ccc] flex-1 p-2 h-full gap-2'>
                 {selectedItem === null ? (
-                    filteredItems.map((item) => {
-                        return (
-                            <Button key={item._id} variant={'default'} onClick={() => selectItem(item)}>
+                    <div className='w-full grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-2'>
+                        {filteredItems.map((item) => (
+                            <Button
+                                key={item._id}
+                                className='h-12 w-full'
+                                variant='default'
+                                onClick={() => selectItem(item)}>
                                 {item.name}
                             </Button>
-                        )
-                    })
+                        ))}
+                    </div>
                 ) : (
                     <div className='flex flex-col flex-1 justify-start gap-3'>
                         <p className='text-xl'>{currentOrderItem.name}</p>

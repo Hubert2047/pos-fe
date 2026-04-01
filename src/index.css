@@ -33,7 +33,7 @@
   --text: #6b6375;
   --text-h: #08060d;
   --bg: #fff;
-  --border: oklch(0.922 0 0);
+  --border: oklch(12.212% 0.00001 271.152);
   --code-bg: #f4f3ec;
   --accent: oklch(0.97 0 0);
   --accent-bg: rgba(170, 59, 255, 0.1);
@@ -91,45 +91,6 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
-/* Dark mode fallback */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow: rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-
-    /* Fallback dark colors */
-    --primary: #3b82f6;
-    --primary-foreground: #ffffff;
-    --secondary: #6b7280;
-    --secondary-foreground: #ffffff;
-    --accent: #a63bff;
-    --accent-foreground: #ffffff;
-    --destructive: #ef4444;
-    --muted: #374151;
-    --muted-foreground: #d1d5db;
-    --input: #1f2028;
-    --ring: #4b5563;
-    --border: #2e303a;
-    --background: #16171d;
-    --foreground: #f3f4f6;
-    --card: #1f2028;
-    --card-foreground: #f3f4f6;
-    --popover: #1f2028;
-    --popover-foreground: #f3f4f6;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
 
 /* ============================================================
    Layout & Base

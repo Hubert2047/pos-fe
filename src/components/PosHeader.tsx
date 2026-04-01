@@ -36,73 +36,7 @@ function PosHeader({
     closeDisplayOrderDetail,
     handlePendingOrder,
 }: Props) {
-    const handlePrint = () => {
-        const invoiceContent = "Test"
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-
-        const iframe = document.createElement('iframe')
-
-        Object.assign(iframe.style, {
-            position: 'fixed',
-            right: '0',
-            bottom: '0',
-            width: '0',
-            height: '0',
-            border: '0',
-            visibility: 'hidden',
-        })
-
-        const htmlContent = `
-      <html>
-        <head>
-          <meta charset="UTF-8">
-          <style>
-            @page { size: 80mm; margin: 0; }
-            body { 
-                font-family: 'Courier New', Courier, monospace; 
-                width: 72mm; 
-                margin: 0; 
-                padding: 10px 2mm;
-                background: white;
-            }
-            pre { 
-                white-space: pre-wrap; 
-                word-wrap: break-word;
-                font-size: 13px; 
-                line-height: 1.5;
-                font-weight: bold;
-                margin: 0;
-            }
-          </style>
-        </head>
-        <body>
-          <pre>${invoiceContent}</pre>
-          <script>
-            window.onload = function() {
-                window.focus();
-                window.print();
-            };
-          </script>
-        </body>
-      </html>
-    `
-
-        iframe.srcdoc = htmlContent
-        document.body.appendChild(iframe)
-
-        iframe.onload = () => {
-            const fw = iframe.contentWindow
-            if (fw) {
-                fw.focus()
-                fw.print()
-                fw.onafterprint = () => {
-                    document.body.removeChild(iframe)
-                }
-            }
-        }
-    }
+    
 
     return (
         <div className='flex items-center p-2 justify-start gap-2 border-b pb-2 border-[#ccc]'>
@@ -152,12 +86,6 @@ function PosHeader({
                 <Label className='whitespace-nowrap'>Tổng tiền:</Label>
                 <Input className='w-30 font-bold text-red-600' value={totalPrice.toLocaleString()} disabled />
             </div>
-
-            {/* Nút In được đặt ở đây */}
-            <Button variant='outline' className='border-blue-500 text-blue-500 hover:bg-blue-50' onClick={handlePrint}>
-                In
-            </Button>
-
             <div className='w-48'>
                 {isDetail || isCheckout || isPendingOrder ? (
                     <Button
